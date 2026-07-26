@@ -270,6 +270,9 @@ body {
 
 .admin-sidebar-desktop {
   display: flex;
+  position: sticky !important;
+  top: 0 !important;
+  align-self: start;
 }
 
 .admin-nav-mobile {

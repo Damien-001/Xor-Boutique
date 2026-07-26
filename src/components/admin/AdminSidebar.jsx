@@ -37,8 +37,11 @@ export default function AdminSidebar({
 
   return (
     <aside className={isMobile ? "admin-mobile-drawer" : "glass-panel admin-sidebar-desktop"} style={{
+      position: isMobile ? 'relative' : 'sticky',
+      top: 0,
       width: isMobile ? '280px' : '260px',
       height: '100%',
+      maxHeight: isMobile ? '100vh' : 'calc(100vh - 100px)',
       padding: '1.75rem 1.25rem',
       background: '#ffffff',
       display: 'flex',
