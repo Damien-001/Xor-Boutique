@@ -126,10 +126,10 @@ export default function Navbar({
               <button
                 className="btn btn-primary"
                 onClick={onToggleAdminView}
-                style={{ padding: '0.45rem 0.65rem', display: 'flex', alignItems: 'center', gap: '0.3rem', background: '#0f172a', borderColor: '#0f172a', whiteSpace: 'nowrap' }}
+                style={{ padding: '0.45rem 0.6rem', display: 'flex', alignItems: 'center', gap: '0.3rem', background: '#0f172a', borderColor: '#0f172a', whiteSpace: 'nowrap', borderRadius: '10px' }}
                 title="Voir la boutique"
               >
-                <Store size={16} color="#ffffff" />
+                <Store size={15} color="#ffffff" />
                 <span style={{ fontWeight: 700, fontSize: '0.78rem', color: '#ffffff' }}>
                   Boutique
                 </span>
@@ -137,15 +137,15 @@ export default function Navbar({
 
               <AdminNotificationModal />
 
-              {/* Admin Mobile Hamburger Menu Button 🍔 */}
+              {/* Admin Mobile Hamburger Menu Button */}
               <button
                 className="btn btn-secondary admin-mobile-menu-trigger"
                 onClick={onOpenAdminMobileMenu}
-                style={{ padding: '0.45rem 0.6rem', background: '#0f172a', color: '#ffffff', borderColor: '#0f172a', display: 'flex', alignItems: 'center', gap: '0.3rem', whiteSpace: 'nowrap' }}
+                style={{ padding: '0.45rem 0.6rem', background: '#0f172a', color: '#ffffff', borderColor: '#0f172a', display: 'flex', alignItems: 'center', gap: '0.3rem', whiteSpace: 'nowrap', borderRadius: '10px' }}
                 title="Ouvrir le menu de navigation Admin"
               >
-                <Menu size={16} color="#ffffff" />
-                <span style={{ fontSize: '0.78rem', fontWeight: 700 }}>Menu 🍔</span>
+                <Menu size={18} color="#ffffff" />
+                <span style={{ fontSize: '0.78rem', fontWeight: 700 }}>Menu</span>
               </button>
             </>
           )}
