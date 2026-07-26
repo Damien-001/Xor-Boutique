@@ -107,19 +107,6 @@ export default function Navbar({
         {/* Navigation Action Buttons (RIGHT) */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', flexShrink: 0 }}>
           
-          {/* Admin Mobile Hamburger Menu Button 🍔 */}
-          {isAdminView && (
-            <button
-              className="btn btn-secondary admin-mobile-menu-trigger"
-              onClick={onOpenAdminMobileMenu}
-              style={{ padding: '0.45rem 0.6rem', background: '#0f172a', color: '#ffffff', borderColor: '#0f172a', display: 'flex', alignItems: 'center', gap: '0.3rem', whiteSpace: 'nowrap' }}
-              title="Ouvrir le menu de navigation Admin"
-            >
-              <Menu size={16} color="#ffffff" />
-              <span style={{ fontSize: '0.78rem', fontWeight: 700 }}>Menu 🍔</span>
-            </button>
-          )}
-
           {/* PWA Install Button */}
           {pwaInstallPrompt && (
             <button 
@@ -132,11 +119,10 @@ export default function Navbar({
               <span className="hide-mobile" style={{ fontSize: '0.78rem' }}>Installer</span>
             </button>
           )}
-
+          
           {/* Store Switch & Notification Bell (Visible in Admin mode) */}
           {isAdminView && (
             <>
-              <AdminNotificationModal />
               <button
                 className="btn btn-primary"
                 onClick={onToggleAdminView}
@@ -147,6 +133,19 @@ export default function Navbar({
                 <span style={{ fontWeight: 700, fontSize: '0.78rem', color: '#ffffff' }}>
                   Boutique
                 </span>
+              </button>
+
+              <AdminNotificationModal />
+
+              {/* Admin Mobile Hamburger Menu Button 🍔 */}
+              <button
+                className="btn btn-secondary admin-mobile-menu-trigger"
+                onClick={onOpenAdminMobileMenu}
+                style={{ padding: '0.45rem 0.6rem', background: '#0f172a', color: '#ffffff', borderColor: '#0f172a', display: 'flex', alignItems: 'center', gap: '0.3rem', whiteSpace: 'nowrap' }}
+                title="Ouvrir le menu de navigation Admin"
+              >
+                <Menu size={16} color="#ffffff" />
+                <span style={{ fontSize: '0.78rem', fontWeight: 700 }}>Menu 🍔</span>
               </button>
             </>
           )}
