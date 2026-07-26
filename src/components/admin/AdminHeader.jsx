@@ -45,15 +45,6 @@ export default function AdminHeader({
       </div>
 
       <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', flexWrap: 'wrap' }}>
-        {/* Mobile Menu Trigger Button */}
-        <button
-          onClick={onOpenMobileMenu}
-          className="btn btn-secondary admin-mobile-menu-trigger"
-          style={{ padding: '0.55rem 0.85rem', fontSize: '0.85rem' }}
-        >
-          <Menu size={18} /> Menu Admin
-        </button>
-
         {outOfStockProducts.length > 0 && (
           <div className="glass-card" style={{ padding: '0.55rem 1rem', background: '#fee2e2', borderColor: '#fca5a5', fontSize: '0.8rem', color: '#dc2626', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.4rem', borderRadius: '10px' }}>
             <AlertTriangle size={16} /> {outOfStockProducts.length} Rupture(s) de Stock
