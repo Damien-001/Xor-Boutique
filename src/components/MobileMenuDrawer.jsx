@@ -79,7 +79,7 @@ export default function MobileMenuDrawer({
           display: 'flex',
           flexDirection: 'column',
           justifyContent: 'space-between',
-          padding: '1.5rem',
+          padding: '1.5rem 1.5rem calc(5.5rem + env(safe-area-inset-bottom, 0px)) 1.5rem',
           background: '#ffffff',
           color: '#0f172a',
           boxShadow: '10px 0 40px rgba(0,0,0,0.15)',

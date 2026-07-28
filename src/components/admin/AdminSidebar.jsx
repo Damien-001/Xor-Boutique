@@ -52,7 +52,7 @@ export default function AdminSidebar({
         width: isMobile ? '285px' : '260px',
         height: isMobile ? '100vh' : '100%',
         maxHeight: isMobile ? '100vh' : 'calc(100vh - 100px)',
-        padding: '1.75rem 1.25rem',
+        padding: isMobile ? '1.75rem 1.25rem calc(5.5rem + env(safe-area-inset-bottom, 0px)) 1.25rem' : '1.75rem 1.25rem',
         background: '#ffffff',
         display: 'flex',
         flexDirection: 'column',
@@ -62,6 +62,8 @@ export default function AdminSidebar({
         boxShadow: isMobile ? '-10px 0 35px rgba(15, 23, 42, 0.25)' : '0 4px 20px rgba(0,0,0,0.03)',
         boxSizing: 'border-box',
         overflowY: 'auto',
+        overscrollBehavior: 'contain',
+        WebkitOverflowScrolling: 'touch',
         zIndex: isMobile ? 360 : 1,
         flexShrink: 0
       }}
