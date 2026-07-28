@@ -13,7 +13,7 @@ import {
 import { getAdminAccounts, setActiveAdminSession } from '../services/store';
 
 export default function AdminLoginPage({ onLoginSuccess, onBackToStore }) {
-  const [username, setUsername] = useState('admin');
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(true);
@@ -320,23 +320,6 @@ export default function AdminLoginPage({ onLoginSuccess, onBackToStore }) {
 
         </form>
 
-        {/* Demo Credentials Info Box */}
-        <div style={{
-          marginTop: '2rem',
-          padding: '0.85rem 1rem',
-          background: '#f1f5f9',
-          border: '1px solid #e2e8f0',
-          borderRadius: '12px',
-          textAlign: 'center'
-        }}>
-          <div style={{ fontSize: '0.8rem', color: '#475569', fontWeight: 600, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem', marginBottom: '0.2rem' }}>
-            <Sparkles size={14} color="#d97706" />
-            <span>Identifiants d'accès administrateur :</span>
-          </div>
-          <div style={{ fontSize: '0.82rem', color: '#64748b' }}>
-            Compte : <strong style={{ color: '#0f172a' }}>admin</strong> • Mot de passe : <strong style={{ color: '#b45309' }}>admin</strong>
-          </div>
-        </div>
 
         {/* Back to Store Public Page Button */}
         <div style={{ textAlign: 'center', marginTop: '1.75rem' }}>
