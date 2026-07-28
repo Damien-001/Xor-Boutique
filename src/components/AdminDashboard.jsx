@@ -1539,28 +1539,31 @@ CREATE POLICY "Admin All avis" ON public.reviews FOR ALL USING (true);`;
                               <option value="Annulé">🔴 Annulé</option>
                             </select>
 
-                            <div style={{ display: 'flex', gap: '0.35rem', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+                            <div style={{ display: 'flex', gap: '0.35rem', alignItems: 'center', justifyContent: 'flex-end', flexWrap: 'nowrap' }}>
                               <button
+                                type="button"
                                 className="btn btn-secondary"
-                                style={{ padding: '0.3rem 0.55rem', fontSize: '0.75rem' }}
+                                style={{ padding: '0.35rem 0.55rem', fontSize: '0.75rem', borderRadius: '8px', display: 'inline-flex', alignItems: 'center', gap: '0.25rem', whiteSpace: 'nowrap' }}
                                 onClick={() => downloadInvoiceFile(order, settings)}
-                                title="Imprimer / Télécharger la Facture PDF"
+                                title="Télécharger / Imprimer la Facture PDF"
                               >
-                                <Download size={13} /> PDF
+                                <Download size={14} /> PDF
                               </button>
 
                               <button
-                                className="btn btn-primary"
-                                style={{ padding: '0.3rem 0.55rem', fontSize: '0.75rem', background: '#25D366', borderColor: '#25D366' }}
+                                type="button"
+                                className="btn"
+                                style={{ padding: '0.35rem 0.55rem', background: '#25D366', color: '#ffffff', border: 'none', borderRadius: '8px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}
                                 onClick={() => shareOrSendPdfReceipt(order, settings)}
-                                title="Transmettre le Reçu par WhatsApp au client"
+                                title="Envoyer le Reçu par WhatsApp au client"
                               >
-                                <MessageCircle size={13} /> WhatsApp
+                                <MessageCircle size={15} />
                               </button>
 
                               <button
-                                className="btn btn-danger"
-                                style={{ padding: '0.3rem 0.55rem', fontSize: '0.75rem', background: '#ef4444', borderColor: '#ef4444' }}
+                                type="button"
+                                className="btn"
+                                style={{ padding: '0.35rem 0.55rem', background: '#ef4444', color: '#ffffff', border: 'none', borderRadius: '8px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}
                                 onClick={() => {
                                   if (confirm(`Voulez-vous vraiment supprimer la commande N° ${order.id} ?`)) {
                                     deleteOrder(order.id);
@@ -1568,7 +1571,7 @@ CREATE POLICY "Admin All avis" ON public.reviews FOR ALL USING (true);`;
                                 }}
                                 title="Supprimer définitivement cette commande"
                               >
-                                <Trash2 size={13} /> Supprimer
+                                <Trash2 size={15} />
                               </button>
                             </div>
                           </div>
