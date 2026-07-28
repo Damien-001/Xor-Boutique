@@ -1734,7 +1734,11 @@ CREATE POLICY "Admin All avis" ON public.reviews FOR ALL USING (true);`;
                       type="button"
                       className="btn btn-secondary"
                       style={{ width: '100%', justifyContent: 'center', color: '#dc2626', borderColor: '#fca5a5' }}
-                      onClick={handlePurgeCacheAndResetStorage}
+                      onClick={() => {
+                        if (confirm('Voulez-vous réinitialiser le stockage local et le cache du navigateur pour recharger des données fraîches ?')) {
+                          resetAllDataToDefaults();
+                        }
+                      }}
                     >
                       <Trash2 size={16} color="#dc2626" /> Réinitialiser le Cache & Vider la Mémoire
                     </button>
