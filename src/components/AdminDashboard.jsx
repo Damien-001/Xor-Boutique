@@ -1940,18 +1940,22 @@ CREATE POLICY "Admin All avis" ON public.reviews FOR ALL USING (true);`;
 
       {/* MOBILE ADMIN HAMBURGER MENU DRAWER 🍔 */}
       {isAdminMobileMenuOpen && (
-        <div style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          background: 'rgba(15, 23, 42, 0.75)',
-          backdropFilter: 'blur(8px)',
-          zIndex: 350,
-          display: 'flex',
-          justifyContent: 'flex-start'
-        }} onClick={() => setIsAdminMobileMenuOpen(false)}>
+        <div 
+          className="admin-drawer-overlay"
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: 'rgba(15, 23, 42, 0.75)',
+            backdropFilter: 'blur(8px)',
+            zIndex: 350,
+            display: 'flex',
+            justifyContent: 'flex-start'
+          }} 
+          onClick={() => setIsAdminMobileMenuOpen(false)}
+        >
 
           <AdminSidebar
             isMobile={true}
