@@ -1734,7 +1734,7 @@ CREATE POLICY "Admin All avis" ON public.reviews FOR ALL USING (true);`;
                       <h5 style={{ fontWeight: 800, fontSize: '0.95rem', marginBottom: '1rem', color: '#0f172a' }}>
                         {teamForm.id ? 'Modifier le Collaborateur' : 'Créer un Nouveau Compte Collaborateur'}
                       </h5>
-                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '1rem', marginBottom: '1rem' }}>
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(210px, 1fr))', gap: '1rem', marginBottom: '1rem' }}>
                         <div>
                           <label className="form-label">Nom Complet / Prénom *</label>
                           <input 
@@ -1772,11 +1772,12 @@ CREATE POLICY "Admin All avis" ON public.reviews FOR ALL USING (true);`;
                           <label className="form-label">Rôle & Privilèges *</label>
                           <select 
                             className="form-select"
+                            style={{ width: '100%', maxWidth: '100%', boxSizing: 'border-box', textOverflow: 'ellipsis', overflow: 'hidden' }}
                             value={teamForm.role}
                             onChange={(e) => setTeamForm({ ...teamForm, role: e.target.value })}
                           >
-                            <option value="collaborator">Collaborateur (Gestionnaire)</option>
-                            <option value="super_admin">Super Admin (Propriétaire)</option>
+                            <option value="collaborator">Collaborateur</option>
+                            <option value="super_admin">Super Admin</option>
                           </select>
                         </div>
                       </div>
