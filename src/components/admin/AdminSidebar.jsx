@@ -12,6 +12,7 @@ import {
   Eye,
   X
 } from 'lucide-react';
+import { getActiveAdminSession } from '../../services/store';
 
 export default function AdminSidebar({
   activeTab,
@@ -25,6 +26,9 @@ export default function AdminSidebar({
   isMobile = false,
   onCloseMobile
 }) {
+  const currentSession = getActiveAdminSession();
+  const isSuperAdmin = currentSession?.role === 'super_admin';
+
   const navItems = [
     { id: 'dashboard', label: 'Tableau de Bord', icon: LayoutDashboard, color: '#0f172a' },
     { id: 'categories', label: 'Catégories', icon: FolderPlus, color: '#2563eb', count: categoriesCount },
@@ -32,7 +36,7 @@ export default function AdminSidebar({
     { id: 'orders', label: 'Commandes', icon: ShoppingBag, color: '#d97706', count: ordersCount },
     { id: 'customers', label: 'Répertoire Clients & CRM', icon: Users, color: '#ec4899', count: customersCount },
     { id: 'analytics', label: 'Analytiques Ventes', icon: BarChart3, color: '#8b5cf6' },
-    { id: 'settings', label: 'Paramètres', icon: Settings, color: '#64748b' }
+    ...(isSuperAdmin ? [{ id: 'settings', label: 'Paramètres', icon: Settings, color: '#64748b' }] : [])
   ];
 
   return (

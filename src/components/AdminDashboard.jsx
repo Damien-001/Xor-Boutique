@@ -46,7 +46,8 @@ import {
   Shirt,
   Smartphone,
   Crown,
-  Heart
+  Heart,
+  ShieldAlert
 } from 'lucide-react';
 import { 
   getCategories, 
@@ -1658,7 +1659,7 @@ CREATE POLICY "Admin All avis" ON public.reviews FOR ALL USING (true);`;
                   <div className="glass-card" style={{ padding: '1.25rem', background: '#f8fafc', borderRadius: '12px' }}>
                     <div style={{ color: '#64748b', fontSize: '0.8rem', fontWeight: 600, textTransform: 'uppercase' }}>Panier Moyen Estimé</div>
                     <div className="font-mono" style={{ fontSize: '1.4rem', fontWeight: 800, color: '#2563eb', marginTop: '0.25rem' }}>
-                      {formatCurrency(orders.length > 0 ? Math.round(totalRevenue / orders.length) : 0)}
+                                  {formatCurrency(orders.length > 0 ? Math.round(totalRevenue / orders.length) : 0)}
                     </div>
                   </div>
                   <div className="glass-card" style={{ padding: '1.25rem', background: '#f8fafc', borderRadius: '12px' }}>
@@ -1672,252 +1673,261 @@ CREATE POLICY "Admin All avis" ON public.reviews FOR ALL USING (true);`;
 
           {/* TAB 6: SETTINGS & WHATSAPP CONFIG */}
           {activeTab === 'settings' && (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: '1.5rem', width: '100%', boxSizing: 'border-box' }}>
-              
-              {/* LEFT COLUMN: SHOP CONFIGURATION & MAINTENANCE */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-                <div className="glass-panel" style={{ padding: '1.75rem', background: '#ffffff', borderRadius: '16px', boxSizing: 'border-box' }}>
-                  <h3 className="font-display" style={{ fontSize: '1.3rem', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.6rem', color: '#0f172a', fontWeight: 800 }}>
-                    <Settings size={22} color="#2563eb" /> Configuration WhatsApp & Boutique
-                  </h3>
-
-                  <form onSubmit={handleSaveSettings}>
-                    <div className="form-group" style={{ marginBottom: '1.25rem' }}>
-                      <label className="form-label">Nom de la Boutique</label>
-                      <input 
-                        type="text" 
-                        className="form-input" 
-                        value={settings.storeName}
-                        onChange={(e) => setSettingsState({ ...settings, storeName: e.target.value })}
-                      />
-                    </div>
-
-                    <div className="form-group" style={{ marginBottom: '1.25rem' }}>
-                      <label className="form-label">Numéro WhatsApp Réception des Commandes *</label>
-                      <input 
-                        type="text" 
-                        className="form-input" 
-                        placeholder="2250700000000 (avec indicatif pays)"
-                        value={settings.whatsappNumber}
-                        onChange={(e) => setSettingsState({ ...settings, whatsappNumber: e.target.value })}
-                        required
-                      />
-                      <span style={{ fontSize: '0.78rem', color: '#64748b', marginTop: '0.25rem' }}>
-                        Les messages de commande WhatsApp des clients seront envoyés à ce numéro.
-                      </span>
-                    </div>
-
-                    <div className="form-group" style={{ marginBottom: '1.5rem' }}>
-                      <label className="form-label">Adresse / Siège de la Boutique</label>
-                      <input 
-                        type="text" 
-                        className="form-input" 
-                        value={settings.address}
-                        onChange={(e) => setSettingsState({ ...settings, address: e.target.value })}
-                      />
-                    </div>
-
-                    <button type="submit" className="btn btn-primary" style={{ width: '100%', justifyContent: 'center', padding: '0.85rem' }}>
-                      Enregistrer les Paramètres
-                    </button>
-                  </form>
-                </div>
-
-                {/* Cache Purge & Mobile Data Sync Card */}
-                <div className="glass-card" style={{ padding: '1.5rem', background: '#fef2f2', borderColor: '#fecaca', borderRadius: '16px' }}>
-                  <div style={{ fontWeight: 800, color: '#991b1b', marginBottom: '0.4rem', fontSize: '0.95rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                    🧹 Maintenance & Purge du Cache Mobile / Navigateur
-                  </div>
-                  <div style={{ fontSize: '0.82rem', color: '#7f1d1d', marginBottom: '0.85rem', lineHeight: 1.5 }}>
-                    Si les anciennes données ou anciens produits continuent de s'afficher sur votre téléphone, cela est dû au stockage local (LocalStorage / Cache PWA) propre à votre navigateur mobile.
-                  </div>
-                  <button 
-                    type="button"
-                    className="btn btn-danger"
-                    style={{ width: '100%', justifyContent: 'center', padding: '0.75rem', fontSize: '0.85rem' }}
-                    onClick={() => {
-                      if (confirm('Voulez-vous réinitialiser le stockage local et le cache du navigateur pour recharger des données fraîches ?')) {
-                        resetAllDataToDefaults();
-                      }
-                    }}
-                  >
-                    🔄 Purger le Cache & Recharger les Données Fraîches
-                  </button>
-                </div>
-              </div>
-
-              {/* RIGHT COLUMN: TEAM ACCOUNTS & DIRECT LINKS */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+            isSuperAdmin ? (
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: '1.5rem', width: '100%', boxSizing: 'border-box' }}>
                 
-                {/* TEAM & COLLABORATORS MANAGEMENT CARD 👥 */}
-                <div className="glass-panel" style={{ padding: '1.75rem', background: '#ffffff', borderRadius: '16px', boxSizing: 'border-box' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem', flexWrap: 'wrap', gap: '0.75rem' }}>
-                    <div>
-                      <h4 style={{ fontSize: '1.1rem', fontWeight: 800, color: '#0f172a', margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                        <Users size={20} color="#2563eb" /> Équipe & Accès Collaborateurs ({adminAccounts.length})
-                      </h4>
-                      <p style={{ color: '#64748b', fontSize: '0.8rem', marginTop: '0.2rem' }}>
-                        Gérez les identifiants et les rôles de connexion pour votre équipe.
-                      </p>
-                    </div>
-                    <button 
-                      type="button" 
-                      className="btn btn-primary"
-                      style={{ fontSize: '0.82rem', padding: '0.45rem 0.85rem' }}
-                      onClick={() => {
-                        setTeamForm({ id: '', name: '', username: '', password: '', role: 'collaborator' });
-                        setIsAddingTeamMember(!isAddingTeamMember);
-                      }}
-                    >
-                      <Plus size={16} /> {isAddingTeamMember ? 'Fermer' : 'Ajouter un Collaborateur'}
-                    </button>
-                  </div>
+                {/* LEFT COLUMN: SHOP CONFIGURATION & MAINTENANCE */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                  <div className="glass-panel" style={{ padding: '1.75rem', background: '#ffffff', borderRadius: '16px', boxSizing: 'border-box' }}>
+                    <h3 className="font-display" style={{ fontSize: '1.3rem', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.6rem', color: '#0f172a', fontWeight: 800 }}>
+                      <Settings size={22} color="#2563eb" /> Configuration WhatsApp & Boutique
+                    </h3>
 
-                  {isAddingTeamMember && (
-                    <form onSubmit={handleSaveTeamMember} style={{ background: '#ffffff', padding: '1.5rem', borderRadius: '14px', marginBottom: '1.5rem', border: '1px solid #cbd5e1', boxShadow: '0 4px 16px rgba(15, 23, 42, 0.04)' }}>
-                      <h5 style={{ fontWeight: 800, fontSize: '1.05rem', marginBottom: '1.25rem', color: '#0f172a' }}>
-                        {teamForm.id ? 'Modifier le Collaborateur' : 'Créer un Nouveau Compte Collaborateur'}
-                      </h5>
-
+                    <form onSubmit={handleSaveSettings}>
                       <div className="form-group" style={{ marginBottom: '1.25rem' }}>
-                        <label className="form-label" style={{ color: '#0f172a', fontWeight: 800 }}>Nom Complet / Prénom *</label>
+                        <label className="form-label">Nom de la Boutique</label>
                         <input 
                           type="text" 
                           className="form-input" 
-                          style={{ width: '100%', boxSizing: 'border-box' }}
-                          placeholder="ex: Marc Koffi" 
-                          value={teamForm.name}
-                          onChange={(e) => setTeamForm({ ...teamForm, name: e.target.value })}
-                          required
+                          value={settings.storeName}
+                          onChange={(e) => setSettingsState({ ...settings, storeName: e.target.value })}
                         />
                       </div>
 
                       <div className="form-group" style={{ marginBottom: '1.25rem' }}>
-                        <label className="form-label" style={{ color: '#0f172a', fontWeight: 800 }}>Identifiant de Connexion *</label>
+                        <label className="form-label">Numéro WhatsApp Réception des Commandes *</label>
                         <input 
                           type="text" 
                           className="form-input" 
-                          style={{ width: '100%', boxSizing: 'border-box' }}
-                          placeholder="ex: marc (en minuscules)" 
-                          value={teamForm.username}
-                          onChange={(e) => setTeamForm({ ...teamForm, username: e.target.value })}
-                          required
-                        />
-                      </div>
-
-                      <div className="form-group" style={{ marginBottom: '1.25rem' }}>
-                        <label className="form-label" style={{ color: '#0f172a', fontWeight: 800 }}>Mot de Passe *</label>
-                        <input 
-                          type="text" 
-                          className="form-input" 
-                          style={{ width: '100%', boxSizing: 'border-box' }}
-                          placeholder="ex: damshop123" 
-                          value={teamForm.password}
-                          onChange={(e) => setTeamForm({ ...teamForm, password: e.target.value })}
+                          placeholder="2250700000000 (avec indicatif pays)"
+                          value={settings.whatsappNumber}
+                          onChange={(e) => setSettingsState({ ...settings, whatsappNumber: e.target.value })}
                           required
                         />
                       </div>
 
                       <div className="form-group" style={{ marginBottom: '1.5rem' }}>
-                        <label className="form-label" style={{ color: '#0f172a', fontWeight: 800 }}>Rôle & Privilèges *</label>
-                        <select 
-                          className="form-select"
-                          style={{ width: '100%', boxSizing: 'border-box' }}
-                          value={teamForm.role}
-                          onChange={(e) => setTeamForm({ ...teamForm, role: e.target.value })}
-                        >
-                          <option value="collaborator">Collaborateur (Gestionnaire Stock & Commandes)</option>
-                          <option value="super_admin">Super Admin (Propriétaire - Accès Total)</option>
-                        </select>
+                        <label className="form-label">Adresse Physique / Siège</label>
+                        <input 
+                          type="text" 
+                          className="form-input" 
+                          value={settings.address}
+                          onChange={(e) => setSettingsState({ ...settings, address: e.target.value })}
+                        />
                       </div>
 
                       <button type="submit" className="btn btn-primary" style={{ width: '100%', justifyContent: 'center', padding: '0.85rem' }}>
-                        💾 Enregistrer le Compte Collaborateur
+                        💾 Enregistrer les Réglages
                       </button>
                     </form>
-                  )}
-
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                    {adminAccounts.map(acc => {
-                      const isOwner = acc.role === 'super_admin';
-                      return (
-                        <div key={acc.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.85rem 1rem', background: '#f8fafc', borderRadius: '10px', border: '1px solid #e2e8f0', flexWrap: 'wrap', gap: '0.5rem' }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                            <div style={{ width: '36px', height: '36px', borderRadius: '50%', background: isOwner ? '#fef3c7' : '#e0f2fe', color: isOwner ? '#d97706' : '#0284c7', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: '0.9rem' }}>
-                              {acc.name ? acc.name.charAt(0).toUpperCase() : 'A'}
-                            </div>
-                            <div>
-                              <div style={{ fontWeight: 800, color: '#0f172a', fontSize: '0.92rem' }}>
-                                {acc.name} <span style={{ fontSize: '0.75rem', fontWeight: 600, color: '#64748b' }}>({acc.username})</span>
-                              </div>
-                              <div style={{ fontSize: '0.78rem', color: isOwner ? '#b45309' : '#0369a1', fontWeight: 700 }}>
-                                {isOwner ? '👑 Super Admin / Propriétaire' : '👔 Collaborateur / Gestionnaire'}
-                              </div>
-                            </div>
-                          </div>
-
-                          <div style={{ display: 'flex', gap: '0.4rem' }}>
-                            <button 
-                              type="button" 
-                              className="btn btn-secondary" 
-                              style={{ padding: '0.4rem 0.65rem', fontSize: '0.75rem' }}
-                              onClick={() => {
-                                setTeamForm(acc);
-                                setIsAddingTeamMember(true);
-                              }}
-                            >
-                              <Edit3 size={14} /> Modifier
-                            </button>
-                            {!isOwner && (
-                              <button 
-                                type="button" 
-                                className="btn btn-danger" 
-                                style={{ padding: '0.4rem 0.65rem', fontSize: '0.75rem' }}
-                                onClick={() => handleDeleteTeamMember(acc.id)}
-                              >
-                                <Trash2 size={14} />
-                              </button>
-                            )}
-                          </div>
-                        </div>
-                      );
-                    })}
                   </div>
-                </div>
 
-                {/* Direct Admin URL Link Card */}
-                <div className="glass-card" style={{ padding: '1.5rem', background: '#eff6ff', borderColor: '#bfdbfe', borderRadius: '16px' }}>
-                  <div style={{ fontWeight: 800, color: '#1e40af', marginBottom: '0.4rem', fontSize: '0.95rem' }}>
-                    🔗 Lien Direct d'Accès Administrateur
-                  </div>
-                  <div style={{ fontSize: '0.82rem', color: '#1e3a8a', marginBottom: '0.85rem', lineHeight: 1.5 }}>
-                    Vous pouvez accéder directement à votre Espace Admin via l'URL <code>/admin</code>.
-                  </div>
-                  <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-                    <input 
-                      type="text" 
-                      className="form-input font-mono" 
-                      readOnly 
-                      value={`${window.location.origin}/admin`}
-                      style={{ fontSize: '0.8rem', background: '#ffffff', flex: 1, minWidth: '220px' }}
-                    />
-                    <button 
+                  {/* Cache & LocalStorage Storage Maintenance Card */}
+                  <div className="glass-card" style={{ padding: '1.5rem', background: '#ffffff', borderRadius: '16px' }}>
+                    <div style={{ fontWeight: 800, color: '#0f172a', marginBottom: '0.4rem', display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '1rem' }}>
+                      <HardDrive size={18} color="#d97706" /> Maintenance de la Mémoire & Purge du Cache
+                    </div>
+                    <p style={{ fontSize: '0.82rem', color: '#64748b', marginBottom: '1rem', lineHeight: 1.5 }}>
+                      Si vos photos ne s'affichent plus ou si votre navigateur indique une limite de stockage dépassée (<code>QuotaExceededError</code>), réinitialisez le cache de votre appareil.
+                    </p>
+                    <button
                       type="button"
-                      className="btn btn-primary"
-                      style={{ whiteSpace: 'nowrap', fontSize: '0.8rem', padding: '0.5rem 1rem' }}
-                      onClick={() => {
-                        const directUrl = `${window.location.origin}/admin`;
-                        navigator.clipboard.writeText(directUrl);
-                        alert('Lien direct d\'accès Admin (/admin) copié dans votre presse-papier !');
-                      }}
+                      className="btn btn-secondary"
+                      style={{ width: '100%', justifyContent: 'center', color: '#dc2626', borderColor: '#fca5a5' }}
+                      onClick={handlePurgeCacheAndResetStorage}
                     >
-                      📋 Copier le Lien
+                      <Trash2 size={16} color="#dc2626" /> Réinitialiser le Cache & Vider la Mémoire
                     </button>
                   </div>
                 </div>
-              </div>
 
-            </div>
+                {/* RIGHT COLUMN: MULTI-ADMIN TEAM & COLLABORATORS MANAGEMENT */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                  <div className="glass-panel" style={{ padding: '1.75rem', background: '#ffffff', borderRadius: '16px', boxSizing: 'border-box' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem', flexWrap: 'wrap', gap: '0.5rem' }}>
+                      <h3 className="font-display" style={{ fontSize: '1.2rem', color: '#0f172a', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <Users size={22} color="#ec4899" /> Équipe & Accès Collaborateurs
+                      </h3>
+                      <button
+                        type="button"
+                        className="btn btn-primary"
+                        style={{ fontSize: '0.8rem', padding: '0.4rem 0.75rem' }}
+                        onClick={() => {
+                          setTeamForm({ id: '', name: '', username: '', password: '', role: 'collaborator' });
+                          setIsAddingTeamMember(!isAddingTeamMember);
+                        }}
+                      >
+                        <Plus size={15} /> {isAddingTeamMember ? 'Fermer' : 'Ajouter un Collaborateur'}
+                      </button>
+                    </div>
+
+                    {/* Team Form */}
+                    {isAddingTeamMember && (
+                      <form onSubmit={handleSaveTeamMember} style={{ background: '#ffffff', padding: '1.5rem', borderRadius: '14px', marginBottom: '1.5rem', border: '1px solid #cbd5e1', boxShadow: '0 4px 16px rgba(15, 23, 42, 0.04)' }}>
+                        <h5 style={{ fontWeight: 800, fontSize: '1.05rem', marginBottom: '1.25rem', color: '#0f172a' }}>
+                          {teamForm.id ? 'Modifier le Collaborateur' : 'Créer un Nouveau Compte Collaborateur'}
+                        </h5>
+
+                        <div className="form-group" style={{ marginBottom: '1.25rem' }}>
+                          <label className="form-label" style={{ color: '#0f172a', fontWeight: 800 }}>Nom Complet / Prénom *</label>
+                          <input 
+                            type="text" 
+                            className="form-input" 
+                            style={{ width: '100%', boxSizing: 'border-box' }}
+                            placeholder="ex: Marc Koffi" 
+                            value={teamForm.name}
+                            onChange={(e) => setTeamForm({ ...teamForm, name: e.target.value })}
+                            required
+                          />
+                        </div>
+
+                        <div className="form-group" style={{ marginBottom: '1.25rem' }}>
+                          <label className="form-label" style={{ color: '#0f172a', fontWeight: 800 }}>Identifiant de Connexion *</label>
+                          <input 
+                            type="text" 
+                            className="form-input" 
+                            style={{ width: '100%', boxSizing: 'border-box' }}
+                            placeholder="ex: marc (en minuscules)" 
+                            value={teamForm.username}
+                            onChange={(e) => setTeamForm({ ...teamForm, username: e.target.value })}
+                            required
+                          />
+                        </div>
+
+                        <div className="form-group" style={{ marginBottom: '1.25rem' }}>
+                          <label className="form-label" style={{ color: '#0f172a', fontWeight: 800 }}>Mot de Passe *</label>
+                          <input 
+                            type="text" 
+                            className="form-input" 
+                            style={{ width: '100%', boxSizing: 'border-box' }}
+                            placeholder="ex: damshop123" 
+                            value={teamForm.password}
+                            onChange={(e) => setTeamForm({ ...teamForm, password: e.target.value })}
+                            required
+                          />
+                        </div>
+
+                        <div className="form-group" style={{ marginBottom: '1.5rem' }}>
+                          <label className="form-label" style={{ color: '#0f172a', fontWeight: 800 }}>Rôle & Privilèges *</label>
+                          <select 
+                            className="form-select"
+                            style={{ width: '100%', boxSizing: 'border-box' }}
+                            value={teamForm.role}
+                            onChange={(e) => setTeamForm({ ...teamForm, role: e.target.value })}
+                          >
+                            <option value="collaborator">Collaborateur (Gestionnaire Stock & Commandes)</option>
+                            <option value="super_admin">Super Admin (Propriétaire - Accès Total)</option>
+                          </select>
+                        </div>
+
+                        <button type="submit" className="btn btn-primary" style={{ width: '100%', justifyContent: 'center', padding: '0.85rem' }}>
+                          💾 Enregistrer le Compte Collaborateur
+                        </button>
+                      </form>
+                    )}
+
+                    {/* Team Members List */}
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                      {adminAccounts.map((acc) => {
+                        const isSuper = acc.role === 'super_admin';
+                        return (
+                          <div key={acc.id} className="glass-card" style={{ padding: '1rem 1.25rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#f8fafc', borderRadius: '12px' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                              <div style={{ width: '36px', height: '36px', borderRadius: '50%', background: isSuper ? '#fef08a' : '#e0f2fe', color: isSuper ? '#854d0e' : '#0369a1', fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.9rem' }}>
+                                {acc.name?.[0]?.toUpperCase() || 'A'}
+                              </div>
+                              <div>
+                                <div style={{ fontWeight: 700, fontSize: '0.9rem', color: '#0f172a' }}>
+                                  {acc.name} <span style={{ fontWeight: 400, color: '#64748b', fontSize: '0.8rem' }}>({acc.username})</span>
+                                </div>
+                                <div style={{ fontSize: '0.75rem', fontWeight: 600, color: isSuper ? '#d97706' : '#2563eb', marginTop: '0.1rem' }}>
+                                  {isSuper ? '👑 Super Admin / Propriétaire' : '👔 Collaborateur (Gestionnaire)'}
+                                </div>
+                              </div>
+                            </div>
+
+                            <div style={{ display: 'flex', gap: '0.4rem' }}>
+                              <button
+                                type="button"
+                                className="btn btn-secondary"
+                                style={{ padding: '0.35rem 0.65rem', fontSize: '0.75rem' }}
+                                onClick={() => {
+                                  setTeamForm({ ...acc });
+                                  setIsAddingTeamMember(true);
+                                }}
+                                title="Modifier cet utilisateur"
+                              >
+                                <Edit3 size={14} /> Modifier
+                              </button>
+
+                              {!isSuper && (
+                                <button
+                                  type="button"
+                                  className="btn btn-danger"
+                                  style={{ padding: '0.35rem 0.65rem', fontSize: '0.75rem' }}
+                                  onClick={() => handleDeleteTeamMember(acc.id, acc.name)}
+                                  title="Supprimer l'accès de ce collaborateur"
+                                >
+                                  <Trash2 size={14} />
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Direct Admin URL Link Card */}
+                  <div className="glass-card" style={{ padding: '1.5rem', background: '#eff6ff', borderColor: '#bfdbfe', borderRadius: '16px' }}>
+                    <div style={{ fontWeight: 800, color: '#1e40af', marginBottom: '0.4rem', fontSize: '0.95rem' }}>
+                      🔗 Lien Direct d'Accès Administrateur
+                    </div>
+                    <div style={{ fontSize: '0.82rem', color: '#1e3a8a', marginBottom: '0.85rem', lineHeight: 1.5 }}>
+                      Vous pouvez accéder directement à votre Espace Admin via l'URL <code>/admin</code>.
+                    </div>
+                    <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                      <input 
+                        type="text" 
+                        className="form-input font-mono" 
+                        readOnly 
+                        value={`${window.location.origin}/admin`}
+                        style={{ fontSize: '0.8rem', background: '#ffffff', flex: 1, minWidth: '220px' }}
+                      />
+                      <button 
+                        type="button"
+                        className="btn btn-primary"
+                        style={{ whiteSpace: 'nowrap', fontSize: '0.8rem', padding: '0.5rem 1rem' }}
+                        onClick={() => {
+                          const directUrl = `${window.location.origin}/admin`;
+                          navigator.clipboard.writeText(directUrl);
+                          alert('Lien direct d\'accès Admin (/admin) copié dans votre presse-papier !');
+                        }}
+                      >
+                        📋 Copier le Lien
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+            ) : (
+              <div className="glass-panel" style={{ padding: '3.5rem 2rem', textAlign: 'center', background: '#ffffff', borderRadius: '16px', margin: '2rem auto', maxWidth: '520px', boxSizing: 'border-box' }}>
+                <ShieldAlert size={56} color="#ef4444" style={{ marginBottom: '1.25rem', margin: '0 auto 1.25rem auto' }} />
+                <h3 style={{ fontSize: '1.35rem', fontWeight: 800, color: '#0f172a', marginBottom: '0.6rem' }}>Accès Réservé au Propriétaire</h3>
+                <p style={{ color: '#64748b', fontSize: '0.92rem', lineHeight: 1.6, marginBottom: '1.5rem' }}>
+                  Seul le compte <strong>Super Admin (Propriétaire)</strong> est autorisé à consulter et modifier les paramètres de la boutique et la gestion de l'équipe.
+                </p>
+                <button
+                  type="button"
+                  className="btn btn-primary"
+                  style={{ padding: '0.75rem 1.5rem' }}
+                  onClick={() => setActiveTab('dashboard')}
+                >
+                  Retour au Tableau de Bord
+                </button>
+              </div>
+            )
           )}
 
         </main>
