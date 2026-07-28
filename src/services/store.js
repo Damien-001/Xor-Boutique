@@ -939,23 +939,36 @@ const INITIAL_ADMIN_ACCOUNTS = [
 ];
 
 export const getAdminAccounts = () => {
+  let localAccs = [];
   const data = localStorage.getItem('damshop_admin_accounts');
   if (data) {
     try {
       const parsed = JSON.parse(data);
-      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      if (Array.isArray(parsed)) localAccs = parsed;
     } catch (e) {}
   }
 
-  // Fallback to settings if present
   const settings = getSettings();
-  if (settings && Array.isArray(settings.adminAccounts) && settings.adminAccounts.length > 0) {
-    safeSetLocalStorage('damshop_admin_accounts', settings.adminAccounts);
-    return settings.adminAccounts;
+  let settingsAccs = [];
+  if (settings && Array.isArray(settings.adminAccounts)) {
+    settingsAccs = settings.adminAccounts;
   }
 
-  safeSetLocalStorage('damshop_admin_accounts', INITIAL_ADMIN_ACCOUNTS);
-  return INITIAL_ADMIN_ACCOUNTS;
+  // Merge & deduplicate by username (case-insensitive)
+  const mergedMap = new Map();
+  INITIAL_ADMIN_ACCOUNTS.forEach(a => {
+    if (a.username) mergedMap.set(a.username.trim().toLowerCase(), a);
+  });
+  settingsAccs.forEach(a => {
+    if (a.username) mergedMap.set(a.username.trim().toLowerCase(), a);
+  });
+  localAccs.forEach(a => {
+    if (a.username) mergedMap.set(a.username.trim().toLowerCase(), a);
+  });
+
+  const finalAccounts = Array.from(mergedMap.values());
+  safeSetLocalStorage('damshop_admin_accounts', finalAccounts);
+  return finalAccounts;
 };
 
 export const saveAdminAccount = (accountData) => {
