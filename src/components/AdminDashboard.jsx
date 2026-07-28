@@ -1586,7 +1586,15 @@ CREATE POLICY "Admin All avis" ON public.reviews FOR ALL USING (true);`;
 
           {/* TAB: REPERTOIRE CLIENTS & CRM MARKETING WHATSAPP */}
           {activeTab === 'customers' && (
-            <AdminCustomersTab orders={orders} formatCurrency={formatCurrency} />
+            <AdminCustomersTab 
+              orders={orders} 
+              formatCurrency={formatCurrency} 
+              onDeleteCustomer={(customer) => {
+                if (confirm(`Voulez-vous vraiment supprimer le client "${customer.name}" (${customer.phone}) du répertoire ?`)) {
+                  (customer.orders || []).forEach(o => deleteOrder(o.id));
+                }
+              }}
+            />
           )}
 
           {/* TAB 4: ANALYTICS */}

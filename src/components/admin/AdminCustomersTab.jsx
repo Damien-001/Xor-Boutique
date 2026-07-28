@@ -5,10 +5,11 @@ import {
   Zap, 
   MessageCircle, 
   Download, 
-  MapPin 
+  MapPin,
+  Trash2
 } from 'lucide-react';
 
-export default function AdminCustomersTab({ orders = [], formatCurrency }) {
+export default function AdminCustomersTab({ orders = [], formatCurrency, onDeleteCustomer }) {
   const [customerSearch, setCustomerSearch] = useState('');
   const [customerFilter, setCustomerFilter] = useState('all'); // 'all' | 'vip' | 'repeat'
   const [copiedBroadcastStatus, setCopiedBroadcastStatus] = useState(false);
@@ -272,15 +273,29 @@ export default function AdminCustomersTab({ orders = [], formatCurrency }) {
                     </td>
 
                     <td style={{ padding: '1rem 1.25rem', textAlign: 'right' }}>
-                      <a
-                        href={whatsappLink}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="btn btn-primary"
-                        style={{ padding: '0.35rem 0.75rem', fontSize: '0.78rem', background: '#25D366', borderColor: '#25D366', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }}
-                      >
-                        <MessageCircle size={14} /> Envoyer Offre WhatsApp
-                      </a>
+                      <div style={{ display: 'flex', gap: '0.4rem', justifyContent: 'flex-end', alignItems: 'center' }}>
+                        <a
+                          href={whatsappLink}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="btn btn-primary"
+                          style={{ padding: '0.4rem 0.75rem', fontSize: '0.78rem', background: '#25D366', borderColor: '#25D366', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }}
+                        >
+                          <MessageCircle size={14} /> Envoyer Offre WhatsApp
+                        </a>
+
+                        {onDeleteCustomer && (
+                          <button
+                            type="button"
+                            className="btn btn-danger"
+                            style={{ padding: '0.4rem 0.65rem', background: '#ef4444', borderColor: '#ef4444', color: '#ffffff', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', borderRadius: '8px' }}
+                            onClick={() => onDeleteCustomer(customer)}
+                            title="Supprimer ce client du répertoire"
+                          >
+                            <Trash2 size={15} />
+                          </button>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 );
