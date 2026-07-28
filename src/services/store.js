@@ -940,27 +940,54 @@ const INITIAL_ADMIN_ACCOUNTS = [
 
 export const getAdminAccounts = () => {
   const data = localStorage.getItem('damshop_admin_accounts');
-  if (!data) {
-    safeSetLocalStorage('damshop_admin_accounts', INITIAL_ADMIN_ACCOUNTS);
-    return INITIAL_ADMIN_ACCOUNTS;
+  if (data) {
+    try {
+      const parsed = JSON.parse(data);
+      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+    } catch (e) {}
   }
-  return JSON.parse(data);
+
+  // Fallback to settings if present
+  const settings = getSettings();
+  if (settings && Array.isArray(settings.adminAccounts) && settings.adminAccounts.length > 0) {
+    safeSetLocalStorage('damshop_admin_accounts', settings.adminAccounts);
+    return settings.adminAccounts;
+  }
+
+  safeSetLocalStorage('damshop_admin_accounts', INITIAL_ADMIN_ACCOUNTS);
+  return INITIAL_ADMIN_ACCOUNTS;
 };
 
 export const saveAdminAccount = (accountData) => {
   const accounts = getAdminAccounts();
+  const cleanUsername = (accountData.username || '').trim();
+  const cleanPassword = (accountData.password || '').trim();
+  const cleanName = (accountData.name || '').trim();
+
+  const formattedData = {
+    ...accountData,
+    name: cleanName,
+    username: cleanUsername,
+    password: cleanPassword
+  };
+
   let updated;
   if (accountData.id) {
-    updated = accounts.map(a => a.id === accountData.id ? { ...a, ...accountData } : a);
+    updated = accounts.map(a => a.id === accountData.id ? { ...a, ...formattedData } : a);
   } else {
     const newAcc = {
-      ...accountData,
+      ...formattedData,
       id: 'acc_' + Date.now(),
       role: accountData.role || 'collaborator'
     };
     updated = [...accounts, newAcc];
   }
   safeSetLocalStorage('damshop_admin_accounts', updated);
+  
+  // Sync to settings for cross-device & cloud backup
+  const settings = getSettings();
+  saveSettings({ ...settings, adminAccounts: updated });
+
   notifyStoreChange();
   return updated;
 };
@@ -968,6 +995,10 @@ export const saveAdminAccount = (accountData) => {
 export const deleteAdminAccount = (id) => {
   const accounts = getAdminAccounts().filter(a => a.id !== id && a.role !== 'super_admin');
   safeSetLocalStorage('damshop_admin_accounts', accounts);
+  
+  const settings = getSettings();
+  saveSettings({ ...settings, adminAccounts: accounts });
+
   notifyStoreChange();
   return accounts;
 };

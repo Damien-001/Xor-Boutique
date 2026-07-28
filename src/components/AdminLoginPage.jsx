@@ -35,15 +35,21 @@ export default function AdminLoginPage({ onLoginSuccess, onBackToStore }) {
     setTimeout(() => {
       const accounts = getAdminAccounts();
       const inputUser = username.trim().toLowerCase();
-      const matchedAccount = accounts.find(acc => 
-        acc.username.toLowerCase() === inputUser && acc.password === password
-      );
+      const inputPass = password.trim();
 
-      // Default fallback check
-      const isDefaultOwner = (inputUser === 'admin' || inputUser === 'admin@damshop.com') && (password === 'admin' || password === 'damshop2026' || password === '1234');
+      const matchedAccount = accounts.find(acc => {
+        const accUser = (acc.username || '').trim().toLowerCase();
+        const accPass = (acc.password || '').trim();
+        return accUser === inputUser && accPass === inputPass;
+      });
+
+      // Default fallback owner check
+      const isDefaultOwner = (inputUser === 'admin' || inputUser === 'admin@damshop.com') && 
+                             (inputPass === 'admin' || inputPass === 'damshop2026' || inputPass === '1234');
 
       if (matchedAccount || isDefaultOwner) {
         const sessionUser = matchedAccount || {
+          id: 'acc_super',
           username: 'admin',
           role: 'super_admin',
           name: 'Propriétaire (Super Admin)'
@@ -60,7 +66,7 @@ export default function AdminLoginPage({ onLoginSuccess, onBackToStore }) {
         onLoginSuccess();
       } else {
         setIsLoading(false);
-        setErrorMsg('Identifiant ou mot de passe incorrect. (Ex: admin/admin ou collaborateur/damshop123)');
+        setErrorMsg('Identifiant ou mot de passe incorrect. (Vérifiez les majuscules/espaces ou que le compte est bien enregistré sur cet appareil)');
       }
     }, 600);
   };
