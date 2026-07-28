@@ -10,6 +10,7 @@ import {
   KeyRound,
   Sparkles
 } from 'lucide-react';
+import { getAdminAccounts, setActiveAdminSession } from '../services/store';
 
 export default function AdminLoginPage({ onLoginSuccess, onBackToStore }) {
   const [username, setUsername] = useState('admin');
@@ -32,11 +33,24 @@ export default function AdminLoginPage({ onLoginSuccess, onBackToStore }) {
 
     // Simulate secure auth delay for smooth UX
     setTimeout(() => {
-      // Valid passwords: 'admin', 'damshop2026', '1234', or stored settings
-      const validUsername = username.trim().toLowerCase() === 'admin' || username.trim().toLowerCase() === 'admin@damshop.com';
-      const validPassword = password === 'admin' || password === 'damshop2026' || password === '1234';
+      const accounts = getAdminAccounts();
+      const inputUser = username.trim().toLowerCase();
+      const matchedAccount = accounts.find(acc => 
+        acc.username.toLowerCase() === inputUser && acc.password === password
+      );
 
-      if (validUsername && validPassword) {
+      // Default fallback check
+      const isDefaultOwner = (inputUser === 'admin' || inputUser === 'admin@damshop.com') && (password === 'admin' || password === 'damshop2026' || password === '1234');
+
+      if (matchedAccount || isDefaultOwner) {
+        const sessionUser = matchedAccount || {
+          username: 'admin',
+          role: 'super_admin',
+          name: 'Propriétaire (Super Admin)'
+        };
+
+        setActiveAdminSession(sessionUser, rememberMe);
+
         if (rememberMe) {
           localStorage.setItem('damshop_admin_authenticated', 'true');
         } else {
@@ -46,7 +60,7 @@ export default function AdminLoginPage({ onLoginSuccess, onBackToStore }) {
         onLoginSuccess();
       } else {
         setIsLoading(false);
-        setErrorMsg('Identifiant ou mot de passe incorrect. (Par défaut: admin / admin)');
+        setErrorMsg('Identifiant ou mot de passe incorrect. (Ex: admin/admin ou collaborateur/damshop123)');
       }
     }, 600);
   };

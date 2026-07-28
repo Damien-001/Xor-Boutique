@@ -61,7 +61,11 @@ import {
   formatCurrency,
   pushAllDataToSupabase,
   pullDataFromSupabase,
-  resetAllDataToDefaults
+  resetAllDataToDefaults,
+  getAdminAccounts,
+  saveAdminAccount,
+  deleteAdminAccount,
+  getActiveAdminSession
 } from '../services/store';
 import { getSupabaseConfig, saveSupabaseConfig, isSupabaseConfigured } from '../services/supabaseClient';
 import AdminSidebar from './admin/AdminSidebar';
@@ -100,6 +104,33 @@ export default function AdminDashboard({
   // Settings State
   const [settings, setSettingsState] = useState(getSettings());
   const [internalIsAdminMobileMenuOpen, setInternalIsAdminMobileMenuOpen] = useState(false);
+
+  // Team Accounts & Collaborators State
+  const [adminAccounts, setAdminAccounts] = useState(() => getAdminAccounts());
+  const [teamForm, setTeamForm] = useState({ id: '', name: '', username: '', password: '', role: 'collaborator' });
+  const [isAddingTeamMember, setIsAddingTeamMember] = useState(false);
+  const currentSession = getActiveAdminSession();
+  const isSuperAdmin = currentSession?.role === 'super_admin';
+
+  const handleSaveTeamMember = (e) => {
+    e.preventDefault();
+    if (!teamForm.username || !teamForm.password || !teamForm.name) {
+      alert('Veuillez remplir le nom, l\'identifiant et le mot de passe.');
+      return;
+    }
+    const updated = saveAdminAccount(teamForm);
+    setAdminAccounts(updated);
+    setTeamForm({ id: '', name: '', username: '', password: '', role: 'collaborator' });
+    setIsAddingTeamMember(false);
+    alert('✅ Compte collaborateur enregistré avec succès !');
+  };
+
+  const handleDeleteTeamMember = (id) => {
+    if (confirm('Êtes-vous sûr de vouloir supprimer ce compte collaborateur ?')) {
+      const updated = deleteAdminAccount(id);
+      setAdminAccounts(updated);
+    }
+  };
 
   // Supabase Cloud Configuration State
   const [supabaseConfig, setSupabaseConfigState] = useState(getSupabaseConfig());
@@ -1642,6 +1673,135 @@ CREATE POLICY "Admin All avis" ON public.reviews FOR ALL USING (true);`;
                   Enregistrer les Paramètres
                 </button>
               </form>
+
+              {/* TEAM & COLLABORATORS MANAGEMENT CARD 👥 */}
+              <div className="glass-card" style={{ padding: '1.5rem', marginTop: '1.5rem', background: '#ffffff', borderColor: '#cbd5e1', borderRadius: '16px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem', flexWrap: 'wrap', gap: '0.75rem' }}>
+                  <div>
+                    <h4 style={{ fontSize: '1.1rem', fontWeight: 800, color: '#0f172a', margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <Users size={20} color="#2563eb" /> Équipe & Accès Collaborateurs ({adminAccounts.length})
+                    </h4>
+                    <p style={{ color: '#64748b', fontSize: '0.8rem', marginTop: '0.2rem' }}>
+                      Gérez les identifiants et les rôles de connexion pour votre équipe.
+                    </p>
+                  </div>
+                  <button 
+                    type="button" 
+                    className="btn btn-primary"
+                    style={{ fontSize: '0.82rem', padding: '0.45rem 0.85rem' }}
+                    onClick={() => {
+                      setTeamForm({ id: '', name: '', username: '', password: '', role: 'collaborator' });
+                      setIsAddingTeamMember(!isAddingTeamMember);
+                    }}
+                  >
+                    <Plus size={16} /> {isAddingTeamMember ? 'Fermer' : 'Ajouter un Collaborateur'}
+                  </button>
+                </div>
+
+                {isAddingTeamMember && (
+                  <form onSubmit={handleSaveTeamMember} style={{ background: '#f8fafc', padding: '1.25rem', borderRadius: '12px', marginBottom: '1.25rem', border: '1px solid #e2e8f0' }}>
+                    <h5 style={{ fontWeight: 800, fontSize: '0.95rem', marginBottom: '1rem', color: '#0f172a' }}>
+                      {teamForm.id ? 'Modifier le Collaborateur' : 'Créer un Nouveau Compte Collaborateur'}
+                    </h5>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem', marginBottom: '1rem' }}>
+                      <div>
+                        <label className="form-label">Nom Complet / Prénom *</label>
+                        <input 
+                          type="text" 
+                          className="form-input" 
+                          placeholder="ex: Marc Koffi" 
+                          value={teamForm.name}
+                          onChange={(e) => setTeamForm({ ...teamForm, name: e.target.value })}
+                          required
+                        />
+                      </div>
+                      <div>
+                        <label className="form-label">Identifiant de Connexion *</label>
+                        <input 
+                          type="text" 
+                          className="form-input" 
+                          placeholder="ex: marc (en minuscules)" 
+                          value={teamForm.username}
+                          onChange={(e) => setTeamForm({ ...teamForm, username: e.target.value })}
+                          required
+                        />
+                      </div>
+                      <div>
+                        <label className="form-label">Mot de Passe *</label>
+                        <input 
+                          type="text" 
+                          className="form-input" 
+                          placeholder="ex: damshop123" 
+                          value={teamForm.password}
+                          onChange={(e) => setTeamForm({ ...teamForm, password: e.target.value })}
+                          required
+                        />
+                      </div>
+                      <div>
+                        <label className="form-label">Rôle & Privilèges *</label>
+                        <select 
+                          className="form-select"
+                          value={teamForm.role}
+                          onChange={(e) => setTeamForm({ ...teamForm, role: e.target.value })}
+                        >
+                          <option value="collaborator">Collaborateur (Gestionnaire Stock & Commandes)</option>
+                          <option value="super_admin">Super Admin (Propriétaire - Accès Total)</option>
+                        </select>
+                      </div>
+                    </div>
+                    <button type="submit" className="btn btn-primary" style={{ width: '100%', justifyContent: 'center', padding: '0.7rem' }}>
+                      💾 Enregistrer le Compte Collaborateur
+                    </button>
+                  </form>
+                )}
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                  {adminAccounts.map(acc => {
+                    const isOwner = acc.role === 'super_admin';
+                    return (
+                      <div key={acc.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.85rem 1rem', background: '#f8fafc', borderRadius: '10px', border: '1px solid #e2e8f0', flexWrap: 'wrap', gap: '0.5rem' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                          <div style={{ width: '36px', height: '36px', borderRadius: '50%', background: isOwner ? '#fef3c7' : '#e0f2fe', color: isOwner ? '#d97706' : '#0284c7', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: '0.9rem' }}>
+                            {acc.name ? acc.name.charAt(0).toUpperCase() : 'A'}
+                          </div>
+                          <div>
+                            <div style={{ fontWeight: 800, color: '#0f172a', fontSize: '0.92rem' }}>
+                              {acc.name} <span style={{ fontSize: '0.75rem', fontWeight: 600, color: '#64748b' }}>({acc.username})</span>
+                            </div>
+                            <div style={{ fontSize: '0.78rem', color: isOwner ? '#b45309' : '#0369a1', fontWeight: 700 }}>
+                              {isOwner ? '👑 Super Admin / Propriétaire' : '👔 Collaborateur / Gestionnaire'}
+                            </div>
+                          </div>
+                        </div>
+
+                        <div style={{ display: 'flex', gap: '0.4rem' }}>
+                          <button 
+                            type="button" 
+                            className="btn btn-secondary" 
+                            style={{ padding: '0.4rem 0.65rem', fontSize: '0.75rem' }}
+                            onClick={() => {
+                              setTeamForm(acc);
+                              setIsAddingTeamMember(true);
+                            }}
+                          >
+                            <Edit3 size={14} /> Modifier
+                          </button>
+                          {!isOwner && (
+                            <button 
+                              type="button" 
+                              className="btn btn-danger" 
+                              style={{ padding: '0.4rem 0.65rem', fontSize: '0.75rem' }}
+                              onClick={() => handleDeleteTeamMember(acc.id)}
+                            >
+                              <Trash2 size={14} />
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
 
               {/* Direct Admin URL Link Card */}
               <div className="glass-card" style={{ padding: '1.25rem', marginTop: '1.5rem', background: '#eff6ff', borderColor: '#bfdbfe' }}>

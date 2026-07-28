@@ -1099,5 +1099,76 @@ export const resetAllDataToDefaults = () => {
   window.location.reload();
 };
 
+// Multi-Admin Team Accounts & Roles Management
+const INITIAL_ADMIN_ACCOUNTS = [
+  {
+    id: 'acc_super',
+    name: 'Propriétaire',
+    username: 'admin',
+    password: 'admin',
+    role: 'super_admin'
+  },
+  {
+    id: 'acc_collab',
+    name: 'Collaborateur (Gestionnaire)',
+    username: 'collaborateur',
+    password: 'damshop123',
+    role: 'collaborator'
+  }
+];
+
+export const getAdminAccounts = () => {
+  const data = localStorage.getItem('damshop_admin_accounts');
+  if (!data) {
+    safeSetLocalStorage('damshop_admin_accounts', INITIAL_ADMIN_ACCOUNTS);
+    return INITIAL_ADMIN_ACCOUNTS;
+  }
+  return JSON.parse(data);
+};
+
+export const saveAdminAccount = (accountData) => {
+  const accounts = getAdminAccounts();
+  let updated;
+  if (accountData.id) {
+    updated = accounts.map(a => a.id === accountData.id ? { ...a, ...accountData } : a);
+  } else {
+    const newAcc = {
+      ...accountData,
+      id: 'acc_' + Date.now(),
+      role: accountData.role || 'collaborator'
+    };
+    updated = [...accounts, newAcc];
+  }
+  safeSetLocalStorage('damshop_admin_accounts', updated);
+  notifyStoreChange();
+  return updated;
+};
+
+export const deleteAdminAccount = (id) => {
+  const accounts = getAdminAccounts().filter(a => a.id !== id && a.role !== 'super_admin');
+  safeSetLocalStorage('damshop_admin_accounts', accounts);
+  notifyStoreChange();
+  return accounts;
+};
+
+export const getActiveAdminSession = () => {
+  const data = localStorage.getItem('damshop_current_admin_session') || sessionStorage.getItem('damshop_current_admin_session');
+  if (data) {
+    try {
+      return JSON.parse(data);
+    } catch (e) {}
+  }
+  return { username: 'admin', role: 'super_admin', name: 'Propriétaire (Super Admin)' };
+};
+
+export const setActiveAdminSession = (userObj, remember = true) => {
+  const payload = JSON.stringify(userObj);
+  if (remember) {
+    localStorage.setItem('damshop_current_admin_session', payload);
+  } else {
+    sessionStorage.setItem('damshop_current_admin_session', payload);
+  }
+};
+
 // Export Storage Backup & Supabase Tools
 export { exportStoreBackup, importStoreBackup, isSupabaseConfigured };
