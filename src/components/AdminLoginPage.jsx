@@ -66,7 +66,7 @@ export default function AdminLoginPage({ onLoginSuccess, onBackToStore }) {
         onLoginSuccess();
       } else {
         setIsLoading(false);
-        setErrorMsg('Identifiant ou mot de passe incorrect. (Vérifiez les majuscules/espaces ou que le compte est bien enregistré sur cet appareil)');
+        setErrorMsg('Identifiant ou mot de passe incorrect. (Note: Si vous avez créé ce collaborateur sur un autre appareil ou sur localhost, connectez-vous avec le compte admin sur ce site pour ajouter le collaborateur)');
       }
     }, 600);
   };
