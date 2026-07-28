@@ -313,6 +313,15 @@ body {
   }
 }
 
+/* Body scroll lock when mobile drawers are open (prevents background scroll on mobile) */
+body.drawer-open {
+  overflow: hidden !important;
+  touch-action: none !important;
+  height: 100vh !important;
+  position: fixed !important;
+  width: 100% !important;
+}
+
 /* Strict Fixed Positioning for Mobile Sidebar Drawers (RIGHT SIDE) */
 .admin-mobile-drawer {
   position: fixed !important;

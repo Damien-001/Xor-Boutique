@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { 
   X, 
   Sparkles, 
@@ -41,6 +41,15 @@ export default function MobileMenuDrawer({
   onInstallPWA,
   settings
 }) {
+  useEffect(() => {
+    if (isOpen) {
+      document.body.classList.add('drawer-open');
+      return () => {
+        document.body.classList.remove('drawer-open');
+      };
+    }
+  }, [isOpen]);
+
   if (!isOpen) return null;
 
   return (

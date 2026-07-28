@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { 
   Plus, 
   Trash2, 
@@ -125,6 +125,19 @@ export default function AdminDashboard({
   // Settings State
   const [settings, setSettingsState] = useState(getSettings());
   const [internalIsAdminMobileMenuOpen, setInternalIsAdminMobileMenuOpen] = useState(false);
+
+  const isAdminMobileMenuOpen = externalIsAdminMobileMenuOpen !== undefined ? externalIsAdminMobileMenuOpen : internalIsAdminMobileMenuOpen;
+  const setIsAdminMobileMenuOpen = externalSetIsAdminMobileMenuOpen !== undefined ? externalSetIsAdminMobileMenuOpen : setInternalIsAdminMobileMenuOpen;
+
+  // Lock body scroll on mobile phones when mobile menu drawer is open
+  useEffect(() => {
+    if (isAdminMobileMenuOpen) {
+      document.body.classList.add('drawer-open');
+      return () => {
+        document.body.classList.remove('drawer-open');
+      };
+    }
+  }, [isAdminMobileMenuOpen]);
 
   // Team Accounts & Collaborators State
   const [adminAccounts, setAdminAccounts] = useState(() => getAdminAccounts());
@@ -286,9 +299,6 @@ CREATE POLICY "Admin All avis" ON public.reviews FOR ALL USING (true);`;
     link.click();
     document.body.removeChild(link);
   };
-
-  const isAdminMobileMenuOpen = externalIsAdminMobileMenuOpen !== undefined ? externalIsAdminMobileMenuOpen : internalIsAdminMobileMenuOpen;
-  const setIsAdminMobileMenuOpen = externalSetIsAdminMobileMenuOpen || setInternalIsAdminMobileMenuOpen;
 
   // Category Form State
   const [categoryForm, setCategoryForm] = useState({
