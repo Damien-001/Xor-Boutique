@@ -1730,58 +1730,64 @@ CREATE POLICY "Admin All avis" ON public.reviews FOR ALL USING (true);`;
                   </div>
 
                   {isAddingTeamMember && (
-                    <form onSubmit={handleSaveTeamMember} style={{ background: '#f8fafc', padding: '1.25rem', borderRadius: '12px', marginBottom: '1.25rem', border: '1px solid #e2e8f0' }}>
-                      <h5 style={{ fontWeight: 800, fontSize: '0.95rem', marginBottom: '1rem', color: '#0f172a' }}>
+                    <form onSubmit={handleSaveTeamMember} style={{ background: '#ffffff', padding: '1.5rem', borderRadius: '14px', marginBottom: '1.5rem', border: '1px solid #cbd5e1', boxShadow: '0 4px 16px rgba(15, 23, 42, 0.04)' }}>
+                      <h5 style={{ fontWeight: 800, fontSize: '1.05rem', marginBottom: '1.25rem', color: '#0f172a' }}>
                         {teamForm.id ? 'Modifier le Collaborateur' : 'Créer un Nouveau Compte Collaborateur'}
                       </h5>
-                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(210px, 1fr))', gap: '1rem', marginBottom: '1rem' }}>
-                        <div>
-                          <label className="form-label">Nom Complet / Prénom *</label>
-                          <input 
-                            type="text" 
-                            className="form-input" 
-                            placeholder="ex: Marc Koffi" 
-                            value={teamForm.name}
-                            onChange={(e) => setTeamForm({ ...teamForm, name: e.target.value })}
-                            required
-                          />
-                        </div>
-                        <div>
-                          <label className="form-label">Identifiant *</label>
-                          <input 
-                            type="text" 
-                            className="form-input" 
-                            placeholder="ex: marc (en minuscules)" 
-                            value={teamForm.username}
-                            onChange={(e) => setTeamForm({ ...teamForm, username: e.target.value })}
-                            required
-                          />
-                        </div>
-                        <div>
-                          <label className="form-label">Mot de Passe *</label>
-                          <input 
-                            type="text" 
-                            className="form-input" 
-                            placeholder="ex: damshop123" 
-                            value={teamForm.password}
-                            onChange={(e) => setTeamForm({ ...teamForm, password: e.target.value })}
-                            required
-                          />
-                        </div>
-                        <div>
-                          <label className="form-label">Rôle & Privilèges *</label>
-                          <select 
-                            className="form-select"
-                            style={{ width: '100%', maxWidth: '100%', boxSizing: 'border-box', textOverflow: 'ellipsis', overflow: 'hidden' }}
-                            value={teamForm.role}
-                            onChange={(e) => setTeamForm({ ...teamForm, role: e.target.value })}
-                          >
-                            <option value="collaborator">Collaborateur</option>
-                            <option value="super_admin">Super Admin</option>
-                          </select>
-                        </div>
+
+                      <div className="form-group" style={{ marginBottom: '1.25rem' }}>
+                        <label className="form-label" style={{ color: '#0f172a', fontWeight: 800 }}>Nom Complet / Prénom *</label>
+                        <input 
+                          type="text" 
+                          className="form-input" 
+                          style={{ width: '100%', boxSizing: 'border-box' }}
+                          placeholder="ex: Marc Koffi" 
+                          value={teamForm.name}
+                          onChange={(e) => setTeamForm({ ...teamForm, name: e.target.value })}
+                          required
+                        />
                       </div>
-                      <button type="submit" className="btn btn-primary" style={{ width: '100%', justifyContent: 'center', padding: '0.7rem' }}>
+
+                      <div className="form-group" style={{ marginBottom: '1.25rem' }}>
+                        <label className="form-label" style={{ color: '#0f172a', fontWeight: 800 }}>Identifiant de Connexion *</label>
+                        <input 
+                          type="text" 
+                          className="form-input" 
+                          style={{ width: '100%', boxSizing: 'border-box' }}
+                          placeholder="ex: marc (en minuscules)" 
+                          value={teamForm.username}
+                          onChange={(e) => setTeamForm({ ...teamForm, username: e.target.value })}
+                          required
+                        />
+                      </div>
+
+                      <div className="form-group" style={{ marginBottom: '1.25rem' }}>
+                        <label className="form-label" style={{ color: '#0f172a', fontWeight: 800 }}>Mot de Passe *</label>
+                        <input 
+                          type="text" 
+                          className="form-input" 
+                          style={{ width: '100%', boxSizing: 'border-box' }}
+                          placeholder="ex: damshop123" 
+                          value={teamForm.password}
+                          onChange={(e) => setTeamForm({ ...teamForm, password: e.target.value })}
+                          required
+                        />
+                      </div>
+
+                      <div className="form-group" style={{ marginBottom: '1.5rem' }}>
+                        <label className="form-label" style={{ color: '#0f172a', fontWeight: 800 }}>Rôle & Privilèges *</label>
+                        <select 
+                          className="form-select"
+                          style={{ width: '100%', boxSizing: 'border-box' }}
+                          value={teamForm.role}
+                          onChange={(e) => setTeamForm({ ...teamForm, role: e.target.value })}
+                        >
+                          <option value="collaborator">Collaborateur (Gestionnaire Stock & Commandes)</option>
+                          <option value="super_admin">Super Admin (Propriétaire - Accès Total)</option>
+                        </select>
+                      </div>
+
+                      <button type="submit" className="btn btn-primary" style={{ width: '100%', justifyContent: 'center', padding: '0.85rem' }}>
                         💾 Enregistrer le Compte Collaborateur
                       </button>
                     </form>
