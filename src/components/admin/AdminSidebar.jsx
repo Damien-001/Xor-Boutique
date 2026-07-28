@@ -32,7 +32,7 @@ export default function AdminSidebar({
     { id: 'orders', label: 'Commandes', icon: ShoppingBag, color: '#d97706', count: ordersCount },
     { id: 'customers', label: 'Répertoire Clients & CRM', icon: Users, color: '#ec4899', count: customersCount },
     { id: 'analytics', label: 'Analytiques Ventes', icon: BarChart3, color: '#8b5cf6' },
-    { id: 'settings', label: 'Réglages WhatsApp', icon: Settings, color: '#64748b' }
+    { id: 'settings', label: 'Paramètres', icon: Settings, color: '#64748b' }
   ];
 
   return (
