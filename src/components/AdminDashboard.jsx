@@ -1526,12 +1526,12 @@ CREATE POLICY "Admin All avis" ON public.reviews FOR ALL USING (true);`;
                           </span>
                         </td>
                         <td style={{ padding: '1rem 1.25rem', textAlign: 'right' }}>
-                          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', alignItems: 'flex-end' }}>
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.45rem', alignItems: 'flex-end', width: '215px', marginLeft: 'auto' }}>
                             <select
                               className="form-select"
                               value={order.status}
                               onChange={(e) => updateOrderStatus(order.id, e.target.value)}
-                              style={{ padding: '0.35rem 0.5rem', fontSize: '0.8rem' }}
+                              style={{ width: '100%', padding: '0.4rem 0.6rem', fontSize: '0.8rem', boxSizing: 'border-box' }}
                             >
                               <option value="En attente">🟡 En attente (Non payé)</option>
                               <option value="En cours">🔵 En cours de livraison</option>
@@ -1539,11 +1539,11 @@ CREATE POLICY "Admin All avis" ON public.reviews FOR ALL USING (true);`;
                               <option value="Annulé">🔴 Annulé</option>
                             </select>
 
-                            <div style={{ display: 'flex', gap: '0.35rem', alignItems: 'center', justifyContent: 'flex-end', flexWrap: 'nowrap' }}>
+                            <div style={{ display: 'flex', gap: '0.35rem', alignItems: 'center', width: '100%', boxSizing: 'border-box' }}>
                               <button
                                 type="button"
                                 className="btn btn-secondary"
-                                style={{ padding: '0.35rem 0.55rem', fontSize: '0.75rem', borderRadius: '8px', display: 'inline-flex', alignItems: 'center', gap: '0.25rem', whiteSpace: 'nowrap' }}
+                                style={{ flex: 1, padding: '0.4rem 0.55rem', fontSize: '0.78rem', borderRadius: '8px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '0.3rem', whiteSpace: 'nowrap' }}
                                 onClick={() => downloadInvoiceFile(order, settings)}
                                 title="Télécharger / Imprimer la Facture PDF"
                               >
@@ -1553,7 +1553,7 @@ CREATE POLICY "Admin All avis" ON public.reviews FOR ALL USING (true);`;
                               <button
                                 type="button"
                                 className="btn"
-                                style={{ padding: '0.35rem 0.55rem', background: '#25D366', color: '#ffffff', border: 'none', borderRadius: '8px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}
+                                style={{ padding: '0.4rem 0.65rem', background: '#25D366', color: '#ffffff', border: 'none', borderRadius: '8px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}
                                 onClick={() => shareOrSendPdfReceipt(order, settings)}
                                 title="Envoyer le Reçu par WhatsApp au client"
                               >
@@ -1563,7 +1563,7 @@ CREATE POLICY "Admin All avis" ON public.reviews FOR ALL USING (true);`;
                               <button
                                 type="button"
                                 className="btn"
-                                style={{ padding: '0.35rem 0.55rem', background: '#ef4444', color: '#ffffff', border: 'none', borderRadius: '8px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}
+                                style={{ padding: '0.4rem 0.65rem', background: '#ef4444', color: '#ffffff', border: 'none', borderRadius: '8px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}
                                 onClick={() => {
                                   if (confirm(`Voulez-vous vraiment supprimer la commande N° ${order.id} ?`)) {
                                     deleteOrder(order.id);
