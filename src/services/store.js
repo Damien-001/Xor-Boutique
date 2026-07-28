@@ -1082,19 +1082,38 @@ export const pullDataFromSupabase = async () => {
 
 export const resetAllDataToDefaults = () => {
   try {
-    localStorage.removeItem('damshop_categories');
-    localStorage.removeItem('damshop_products');
-    localStorage.removeItem('damshop_orders');
+    const demoProdIds = ['prod_1', 'prod_2', 'prod_3', 'prod_4'];
+    const demoCatIds = ['cat_1', 'cat_2', 'cat_3', 'cat_4', 'cat_5'];
+    const demoOrderIds = ['DS-9821'];
+
+    // Filter out initial sample demo items so old sample items are permanently purged
+    const activeProducts = getProducts().filter(p => !demoProdIds.includes(p.id));
+    const activeCategories = getCategories().filter(c => !demoCatIds.includes(c.id));
+    const activeOrders = getOrders().filter(o => !demoOrderIds.includes(o.id));
+    const activeSettings = getSettings();
+
+    // Clear temporary caches
     localStorage.removeItem('damshop_wishlist');
     localStorage.removeItem('damshop_cart');
-    localStorage.removeItem('damshop_reviews');
-    localStorage.removeItem('damshop_settings');
     localStorage.removeItem('damshop_notifications');
+    localStorage.removeItem('damshop_reviews');
+
+    // Save cleaned active data (no demo sample items, preserving user's own added items)
+    safeSetLocalStorage('damshop_categories', activeCategories);
+    safeSetLocalStorage('damshop_products', activeProducts);
+    safeSetLocalStorage('damshop_orders', activeOrders);
+    safeSetLocalStorage('damshop_settings', activeSettings);
+
+    setItem('categories', activeCategories);
+    setItem('products', activeProducts);
+    setItem('orders', activeOrders);
+    setItem('settings', activeSettings);
+
     if (window.indexedDB) {
       window.indexedDB.deleteDatabase('DamShopDB');
     }
   } catch (e) {
-    console.warn('Reset error:', e);
+    console.warn('Purge cache error:', e);
   }
   window.location.reload();
 };
