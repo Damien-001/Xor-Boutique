@@ -608,38 +608,13 @@ export const getOrders = () => {
 };
 
 // Admin Notification System
-const INITIAL_NOTIFICATIONS = [
-  {
-    id: 'notif_1',
-    title: 'Nouvelle Commande Client ! 🛍️',
-    message: 'Mme Koffi a passé la commande N° DS-4821 pour 35 000 FCFA',
-    type: 'order',
-    timestamp: new Date(Date.now() - 1000 * 60 * 15).toISOString(),
-    read: false
-  },
-  {
-    id: 'notif_2',
-    title: 'Nouvel Avis Client ⭐',
-    message: 'Marc D. a laissé 5 étoiles sur Montre Luxe Chrono',
-    type: 'review',
-    timestamp: new Date(Date.now() - 1000 * 60 * 45).toISOString(),
-    read: false
-  },
-  {
-    id: 'notif_3',
-    title: 'Alerte Stock Faible ⚠️',
-    message: 'Le produit "Sac à main cuir Premium" n\'a plus que 2 unités en stock',
-    type: 'stock',
-    timestamp: new Date(Date.now() - 1000 * 60 * 120).toISOString(),
-    read: true
-  }
-];
+const INITIAL_NOTIFICATIONS = [];
 
 export const getNotifications = () => {
   const data = localStorage.getItem('damshop_notifications');
-  if (!data) {
-    localStorage.setItem('damshop_notifications', JSON.stringify(INITIAL_NOTIFICATIONS));
-    return INITIAL_NOTIFICATIONS;
+  if (data === null) {
+    localStorage.setItem('damshop_notifications', JSON.stringify([]));
+    return [];
   }
   try {
     return JSON.parse(data);
@@ -1095,8 +1070,8 @@ export const resetAllDataToDefaults = () => {
     // Clear temporary caches
     localStorage.removeItem('damshop_wishlist');
     localStorage.removeItem('damshop_cart');
-    localStorage.removeItem('damshop_notifications');
     localStorage.removeItem('damshop_reviews');
+    safeSetLocalStorage('damshop_notifications', []);
 
     // Save cleaned active data (no demo sample items, preserving user's own added items)
     safeSetLocalStorage('damshop_categories', activeCategories);
