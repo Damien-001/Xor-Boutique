@@ -313,19 +313,20 @@ body {
   }
 }
 
-/* Strict Fixed Positioning for Mobile Sidebar Drawers */
+/* Strict Fixed Positioning for Mobile Sidebar Drawers (RIGHT SIDE) */
 .admin-mobile-drawer {
   position: fixed !important;
   top: 0 !important;
-  left: 0 !important;
+  right: 0 !important;
+  left: auto !important;
   bottom: 0 !important;
   height: 100vh !important;
   max-height: 100vh !important;
   width: 285px !important;
   z-index: 360 !important;
   background: #ffffff !important;
-  box-shadow: 10px 0 35px rgba(15, 23, 42, 0.25) !important;
-  border-radius: 0 16px 16px 0 !important;
+  box-shadow: -10px 0 35px rgba(15, 23, 42, 0.25) !important;
+  border-radius: 16px 0 0 16px !important;
 }
 
 .admin-drawer-overlay {

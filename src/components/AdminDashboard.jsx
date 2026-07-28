@@ -1952,7 +1952,7 @@ CREATE POLICY "Admin All avis" ON public.reviews FOR ALL USING (true);`;
             backdropFilter: 'blur(8px)',
             zIndex: 350,
             display: 'flex',
-            justifyContent: 'flex-start'
+            justifyContent: 'flex-end'
           }} 
           onClick={() => setIsAdminMobileMenuOpen(false)}
         >
