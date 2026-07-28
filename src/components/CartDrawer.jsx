@@ -32,6 +32,7 @@ export default function CartDrawer({ isOpen, onClose, cartItems, onUpdateQuantit
       ...formData,
       total,
       items: cartItems.map(item => ({
+        id: item.product?.id,
         name: item.product.name,
         quantity: item.quantity,
         price: item.product.price,
@@ -288,7 +289,7 @@ export default function CartDrawer({ isOpen, onClose, cartItems, onUpdateQuantit
                     boxShadow: '0 4px 14px rgba(37, 211, 102, 0.3)'
                   }}
                 >
-                  <MessageCircle size={20} /> Transmettre avec Photos sur WhatsApp
+                  <MessageCircle size={20} /> Envoyer la Commande sur WhatsApp
                 </a>
 
                 <button

@@ -18,6 +18,14 @@ import {
   subscribeToSupabaseRealtimeOrders
 } from './supabaseClient';
 
+const safeSetLocalStorage = (key, value) => {
+  try {
+    localStorage.setItem(key, JSON.stringify(value));
+  } catch (err) {
+    console.warn(`LocalStorage quota exceeded for ${key}. Data safely saved in IndexedDB fallback.`, err);
+  }
+};
+
 const INITIAL_SETTINGS = {
   storeName: 'Xor Boutique',
   whatsappNumber: '2250700000000',
@@ -261,32 +269,33 @@ const playOrderChimeSound = () => {
     osc2.connect(gain);
     gain.connect(ctx.destination);
 
-    osc1.start();
-    osc2.start();
+    osc1.start(ctx.currentTime);
+    osc2.start(ctx.currentTime);
     osc1.stop(ctx.currentTime + 0.6);
     osc2.stop(ctx.currentTime + 0.6);
   } catch (e) {
-    console.warn('Audio Notification sound unavailable:', e);
+    console.warn('Audio play failed:', e);
   }
 };
 
 // System Native Web Push Notification Request & Trigger
 export const requestNotificationPermission = async () => {
-  if ('Notification' in window) {
-    const permission = await Notification.requestPermission();
-    return permission === 'granted';
-  }
-  return false;
+  try {
+    if ('Notification' in window && Notification.permission === 'default') {
+      await Notification.requestPermission();
+    }
+  } catch (e) {}
 };
 
 const triggerSystemNativeNotification = (order) => {
-  if ('Notification' in window && Notification.permission === 'granted') {
-    new Notification(`🎉 Nouvelle Commande DamShop ! N° ${order.id}`, {
-      body: `Client: ${order.customerName} • Total: ${formatCurrency(order.total)}\nMode: ${order.paymentMethod}`,
-      icon: '/icon-192.png',
-      tag: order.id
-    });
-  }
+  try {
+    if ('Notification' in window && Notification.permission === 'granted') {
+      new Notification('🎉 Nouvelle Commande DamShop !', {
+        body: `${order.customerName} a passé la commande N° ${order.id} pour ${order.total} FCFA`,
+        icon: '/favicon.svg'
+      });
+    }
+  } catch (e) {}
 };
 
 // Settings Functions
@@ -297,7 +306,7 @@ export const getSettings = () => {
 
 export const saveSettings = (newSettings) => {
   const updated = { ...getSettings(), ...newSettings };
-  localStorage.setItem('damshop_settings', JSON.stringify(updated));
+  safeSetLocalStorage('damshop_settings', updated);
   setItem('settings', updated);
   notifyStoreChange();
   return updated;
@@ -307,7 +316,7 @@ export const saveSettings = (newSettings) => {
 export const getCategories = () => {
   const data = localStorage.getItem('damshop_categories');
   if (!data) {
-    localStorage.setItem('damshop_categories', JSON.stringify(INITIAL_CATEGORIES));
+    safeSetLocalStorage('damshop_categories', INITIAL_CATEGORIES);
     setItem('categories', INITIAL_CATEGORIES);
     return INITIAL_CATEGORIES;
   }
@@ -330,7 +339,7 @@ export const saveCategory = (categoryData) => {
     };
     updated = [targetCat, ...categories];
   }
-  localStorage.setItem('damshop_categories', JSON.stringify(updated));
+  safeSetLocalStorage('damshop_categories', updated);
   setItem('categories', updated);
   
   if (isSupabaseConfigured()) {
@@ -343,7 +352,7 @@ export const saveCategory = (categoryData) => {
 
 export const deleteCategory = (id) => {
   const categories = getCategories().filter(c => c.id !== id);
-  localStorage.setItem('damshop_categories', JSON.stringify(categories));
+  safeSetLocalStorage('damshop_categories', categories);
   setItem('categories', categories);
 
   if (isSupabaseConfigured()) {
@@ -358,7 +367,7 @@ export const deleteCategory = (id) => {
 export const getProducts = () => {
   const data = localStorage.getItem('damshop_products');
   if (!data) {
-    localStorage.setItem('damshop_products', JSON.stringify(INITIAL_PRODUCTS));
+    safeSetLocalStorage('damshop_products', INITIAL_PRODUCTS);
     setItem('products', INITIAL_PRODUCTS);
     return INITIAL_PRODUCTS;
   }
@@ -384,7 +393,7 @@ export const saveProduct = (productData) => {
     };
     updated = [targetProd, ...products];
   }
-  localStorage.setItem('damshop_products', JSON.stringify(updated));
+  safeSetLocalStorage('damshop_products', updated);
   setItem('products', updated);
   updateCategoryCounts(updated);
 
@@ -399,7 +408,7 @@ export const saveProduct = (productData) => {
 export const updateProductStock = (productId, newStock) => {
   const products = getProducts();
   const updated = products.map(p => p.id === productId ? { ...p, stock: Math.max(0, Number(newStock)) } : p);
-  localStorage.setItem('damshop_products', JSON.stringify(updated));
+  safeSetLocalStorage('damshop_products', updated);
   setItem('products', updated);
 
   const updatedProduct = updated.find(p => p.id === productId);
@@ -413,7 +422,7 @@ export const updateProductStock = (productId, newStock) => {
 
 export const deleteProduct = (id) => {
   const products = getProducts().filter(p => p.id !== id);
-  localStorage.setItem('damshop_products', JSON.stringify(products));
+  safeSetLocalStorage('damshop_products', products);
   setItem('products', products);
   updateCategoryCounts(products);
 
@@ -431,7 +440,7 @@ const updateCategoryCounts = (products) => {
     const count = products.filter(p => p.category === cat.id).length;
     return { ...cat, count };
   });
-  localStorage.setItem('damshop_categories', JSON.stringify(updatedCategories));
+  safeSetLocalStorage('damshop_categories', updatedCategories);
   setItem('categories', updatedCategories);
 };
 
@@ -736,24 +745,28 @@ export const deleteOrder = (orderId) => {
 // WhatsApp Generator & Formatting
 export const generateWhatsAppLink = (order, settings) => {
   const phone = settings?.whatsappNumber || '2250700000000';
-  let text = `Bonjour *DamShop* ! 👋\nJe souhaite valider ma commande *N° ${order.id}*.\n\n`;
+  const storeName = settings?.storeName || 'DamShop';
+  let text = `Bonjour *${storeName}* ! 👋\nJe souhaite valider ma commande *N° ${order.id}*.\n\n`;
   text += `👤 *Client :* ${order.customerName}\n`;
   text += `📞 *Tel :* ${order.phone}\n`;
   text += `📍 *Adresse de livraison :* ${order.address}\n\n`;
   text += `📦 *Articles Commandés :*\n`;
 
-  order.items.forEach((item, index) => {
+  (order.items || []).forEach((item, index) => {
     text += `\n${index + 1}. *${item.name}*\n`;
     text += `   • Quantité : ${item.quantity}\n`;
-    text += `   • Tailles/Couleurs : ${item.size || 'N/A'}, ${item.color || 'N/A'}\n`;
+    text += `   • Tailles/Couleurs : ${item.size || 'Standard'}, ${item.color || 'Standard'}\n`;
     text += `   • Prix : ${formatCurrency(item.price * item.quantity)}\n`;
     if (item.image && (item.image.startsWith('http://') || item.image.startsWith('https://'))) {
-      text += `   🖼️ Aperçu photo : ${item.image}\n`;
+      text += `   🖼️ Photo Produit : ${item.image}\n`;
+    } else if (item.id) {
+      const productLink = `${window.location.origin}${window.location.pathname}?product=${item.id}`;
+      text += `   🔗 Fiche Article & Photo : ${productLink}\n`;
     }
   });
 
   text += `\n💰 *TOTAL COMMANDE : ${formatCurrency(order.total)}*\n`;
-  text += `💳 *Mode de Paiement :* ${order.paymentMethod}\n\n`;
+  text += `💳 *Mode de Paiement :* ${order.paymentMethod || 'Paiement à la livraison'}\n\n`;
   text += `Merci d'avance pour la confirmation et la livraison rapide ! 🚀`;
 
   return `https://wa.me/${phone.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(text)}`;
@@ -1067,8 +1080,24 @@ export const pullDataFromSupabase = async () => {
   }
 };
 
-// Auto-pull from Supabase on module load if connected
-pullDataFromSupabase().catch(() => {});
+export const resetAllDataToDefaults = () => {
+  try {
+    localStorage.removeItem('damshop_categories');
+    localStorage.removeItem('damshop_products');
+    localStorage.removeItem('damshop_orders');
+    localStorage.removeItem('damshop_wishlist');
+    localStorage.removeItem('damshop_cart');
+    localStorage.removeItem('damshop_reviews');
+    localStorage.removeItem('damshop_settings');
+    localStorage.removeItem('damshop_notifications');
+    if (window.indexedDB) {
+      window.indexedDB.deleteDatabase('DamShopDB');
+    }
+  } catch (e) {
+    console.warn('Reset error:', e);
+  }
+  window.location.reload();
+};
 
 // Export Storage Backup & Supabase Tools
 export { exportStoreBackup, importStoreBackup, isSupabaseConfigured };

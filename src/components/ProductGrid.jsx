@@ -7,6 +7,7 @@ export default function ProductGrid({
   categories, 
   onAddToCart, 
   onQuickView, 
+  wishlist = [],
   wishlistIds = [], 
   onToggleWishlist 
 }) {
@@ -14,6 +15,8 @@ export default function ProductGrid({
     acc[cat.id] = cat.name;
     return acc;
   }, {});
+
+  const activeWishlist = Array.isArray(wishlistIds) && wishlistIds.length > 0 ? wishlistIds : (Array.isArray(wishlist) ? wishlist : []);
 
   if (products.length === 0) {
     return (
@@ -49,7 +52,7 @@ export default function ProductGrid({
           categoryName={categoryMap[product.category] || 'Autre'}
           onAddToCart={onAddToCart}
           onQuickView={onQuickView}
-          isWishlisted={wishlistIds.includes(product.id)}
+          isWishlisted={activeWishlist.includes(product.id)}
           onToggleWishlist={onToggleWishlist}
         />
       ))}

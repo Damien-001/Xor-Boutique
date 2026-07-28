@@ -44,7 +44,15 @@ export default function App() {
     setIsAdminAuthenticated(false);
     handleToggleAdminView(false);
   };
-  const [activeCategory, setActiveCategory] = useState('all');
+  const [activeCategory, setActiveCategoryState] = useState(() => {
+    return localStorage.getItem('damshop_active_category') || 'all';
+  });
+
+  const setActiveCategory = (cat) => {
+    setActiveCategoryState(cat);
+    localStorage.setItem('damshop_active_category', cat);
+  };
+
   const [searchQuery, setSearchQuery] = useState('');
 
   // Modals, Drawers and Page Views State
@@ -129,7 +137,7 @@ export default function App() {
       requestNotificationPermission();
 
       if (isAdminAuthenticated) {
-        window.history.replaceState({}, '', '/admin');
+        window.history.replaceState({}, '', '/admin' + (window.location.hash || ''));
       } else {
         window.history.replaceState({}, '', '/login');
       }
@@ -167,7 +175,7 @@ export default function App() {
     if (isAdminView) {
       if (isAdminAuthenticated) {
         if (window.location.pathname !== '/admin') {
-          window.history.replaceState({}, '', '/admin');
+          window.history.replaceState({}, '', '/admin' + (window.location.hash || ''));
         }
       } else {
         if (window.location.pathname !== '/login') {
@@ -185,7 +193,7 @@ export default function App() {
     if (nextState) {
       requestNotificationPermission();
       if (isAdminAuthenticated) {
-        window.history.replaceState({}, '', '/admin');
+        window.history.replaceState({}, '', '/admin' + (window.location.hash || ''));
       } else {
         window.history.replaceState({}, '', '/login');
       }
@@ -272,8 +280,8 @@ export default function App() {
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
       
-      {/* Live Order Toast Notification Bar */}
-      {liveOrderToast && (
+      {/* Live Order Toast Notification Bar - ONLY displayed when logged in as Admin */}
+      {liveOrderToast && isAdminView && isAdminAuthenticated && (
         <div style={{
           position: 'fixed',
           top: '20px',
@@ -392,6 +400,7 @@ export default function App() {
               products={filteredProducts}
               categories={categories}
               wishlist={wishlist}
+              wishlistIds={wishlist}
               onAddToCart={(p) => handleAddToCart(p, 1)}
               onQuickView={(p) => handleOpenQuickViewModal(p)}
               onToggleWishlist={(id) => toggleWishlist(id)}

@@ -36,24 +36,31 @@ export default function AdminSidebar({
   ];
 
   return (
-    <aside className={isMobile ? "admin-mobile-drawer" : "glass-panel admin-sidebar-desktop"} style={{
-      position: isMobile ? 'relative' : 'sticky',
-      top: 0,
-      width: isMobile ? '280px' : '260px',
-      height: '100%',
-      maxHeight: isMobile ? '100vh' : 'calc(100vh - 100px)',
-      padding: '1.75rem 1.25rem',
-      background: '#ffffff',
-      display: 'flex',
-      flexDirection: 'column',
-      justifyContent: 'space-between',
-      borderColor: '#e2e8f0',
-      borderRadius: isMobile ? '0' : '16px',
-      boxShadow: '0 4px 20px rgba(0,0,0,0.03)',
-      boxSizing: 'border-box',
-      overflowY: 'auto',
-      flexShrink: 0
-    }}>
+    <aside 
+      className={isMobile ? "admin-mobile-drawer animate-fade-in" : "glass-panel admin-sidebar-desktop"} 
+      onClick={(e) => isMobile && e.stopPropagation()}
+      style={{
+        position: isMobile ? 'fixed' : 'sticky',
+        top: 0,
+        left: 0,
+        bottom: 0,
+        width: isMobile ? '285px' : '260px',
+        height: isMobile ? '100vh' : '100%',
+        maxHeight: isMobile ? '100vh' : 'calc(100vh - 100px)',
+        padding: '1.75rem 1.25rem',
+        background: '#ffffff',
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'space-between',
+        borderColor: '#e2e8f0',
+        borderRadius: isMobile ? '0 16px 16px 0' : '16px',
+        boxShadow: isMobile ? '10px 0 35px rgba(15, 23, 42, 0.25)' : '0 4px 20px rgba(0,0,0,0.03)',
+        boxSizing: 'border-box',
+        overflowY: 'auto',
+        zIndex: isMobile ? 360 : 1,
+        flexShrink: 0
+      }}
+    >
       <div>
         {/* Sidebar Brand Header */}
         <div style={{ padding: '0 0.25rem 1.5rem 0.25rem', borderBottom: '1px solid #e2e8f0', marginBottom: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>

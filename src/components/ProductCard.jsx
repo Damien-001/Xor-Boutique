@@ -45,15 +45,20 @@ export default function ProductCard({
   const currentCardImg = productImages[cardImgIndex] || product.image;
 
   return (
-    <div className="glass-card animate-fade-in" style={{
-      display: 'flex',
-      flexDirection: 'column',
-      overflow: 'hidden',
-      position: 'relative',
-      background: '#ffffff',
-      borderColor: '#e2e8f0',
-      opacity: isOutOfStock ? 0.85 : 1
-    }}>
+    <div 
+      className="glass-card animate-fade-in" 
+      onClick={() => onQuickView(product)}
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
+        position: 'relative',
+        background: '#ffffff',
+        borderColor: '#e2e8f0',
+        opacity: isOutOfStock ? 0.85 : 1,
+        cursor: 'pointer'
+      }}
+    >
       {/* Product Image Box */}
       <div style={{
         position: 'relative',
@@ -290,7 +295,10 @@ export default function ProductCard({
               background: isOutOfStock ? '#94a3b8' : '#0f172a',
               cursor: isOutOfStock ? 'not-allowed' : 'pointer'
             }}
-            onClick={() => !isOutOfStock && onAddToCart(product)}
+            onClick={(e) => {
+              e.stopPropagation();
+              if (!isOutOfStock) onAddToCart(product);
+            }}
           >
             <ShoppingBag size={16} /> 
             {isOutOfStock ? 'Rupture de Stock' : 'Ajouter au Panier'}

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { 
   Plus, 
   Trash2, 
@@ -60,7 +60,8 @@ import {
   generateWhatsAppPaidReceiptLink,
   formatCurrency,
   pushAllDataToSupabase,
-  pullDataFromSupabase
+  pullDataFromSupabase,
+  resetAllDataToDefaults
 } from '../services/store';
 import { getSupabaseConfig, saveSupabaseConfig, isSupabaseConfigured } from '../services/supabaseClient';
 import AdminSidebar from './admin/AdminSidebar';
@@ -78,7 +79,23 @@ export default function AdminDashboard({
   isAdminMobileMenuOpen: externalIsAdminMobileMenuOpen,
   setIsAdminMobileMenuOpen: externalSetIsAdminMobileMenuOpen
 }) {
-  const [activeTab, setActiveTab] = useState('dashboard'); // 'dashboard' | 'categories' | 'products' | 'orders' | 'analytics' | 'storage' | 'settings'
+  const [activeTab, setActiveTabState] = useState(() => {
+    const hash = window.location.hash.replace('#', '');
+    const validTabs = ['dashboard', 'categories', 'products', 'orders', 'customers', 'analytics', 'settings'];
+    if (hash && validTabs.includes(hash)) {
+      return hash;
+    }
+    const saved = localStorage.getItem('damshop_admin_active_tab');
+    return (saved && validTabs.includes(saved)) ? saved : 'dashboard';
+  });
+
+  const setActiveTab = (tab) => {
+    setActiveTabState(tab);
+    localStorage.setItem('damshop_admin_active_tab', tab);
+    if (window.location.hash !== `#${tab}`) {
+      window.history.replaceState(null, '', `${window.location.pathname}#${tab}`);
+    }
+  };
 
   // Settings State
   const [settings, setSettingsState] = useState(getSettings());
@@ -269,42 +286,110 @@ CREATE POLICY "Admin All avis" ON public.reviews FOR ALL USING (true);`;
   const lowStockProducts = products.filter(p => p.stock > 0 && p.stock <= 3);
   const recentOrders = orders.slice(0, 5);
 
-  // Mock Weekly Sales Data for Executive Chart
-  const weeklySalesData = [
-    { day: 'Lun', sales: 180000 },
-    { day: 'Mar', sales: 240000 },
-    { day: 'Mer', sales: 195000 },
-    { day: 'Jeu', sales: 320000 },
-    { day: 'Ven', sales: 410000 },
-    { day: 'Sam', sales: 560000 },
-    { day: 'Dim', sales: 480000 }
-  ];
-  const maxSales = Math.max(...weeklySalesData.map(d => d.sales));
+  // Dynamic 7-day Sales Data calculated from real store orders
+  const weeklySalesData = useMemo(() => {
+    const dayNames = ['Dim', 'Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam'];
+    const result = [];
+    const today = new Date();
+    
+    // Generate 7 days ending today
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date(today);
+      d.setDate(today.getDate() - i);
+      const dateStr = d.toISOString().split('T')[0];
+      const dayName = dayNames[d.getDay()];
 
-  // Multi-Image Upload & Management Handlers
-  const handleMultipleFileUpload = (e) => {
+      const daySales = (orders || []).reduce((sum, o) => {
+        if (!o || o.status === 'Annulé') return sum;
+        let oDateStr = '';
+        if (o.date) {
+          oDateStr = o.date.includes('T') ? o.date.split('T')[0] : o.date;
+        } else if (o.timestamp) {
+          oDateStr = new Date(o.timestamp).toISOString().split('T')[0];
+        } else if (o.created_at) {
+          oDateStr = new Date(o.created_at).toISOString().split('T')[0];
+        }
+        return oDateStr === dateStr ? sum + (Number(o.total) || 0) : sum;
+      }, 0);
+
+      result.push({
+        dateStr,
+        day: dayName,
+        sales: daySales,
+        isToday: i === 0
+      });
+    }
+    return result;
+  }, [orders]);
+
+  const maxSales = useMemo(() => {
+    const max = Math.max(...weeklySalesData.map(d => d.sales));
+    return max > 0 ? max : 1;
+  }, [weeklySalesData]);
+
+  // Automatic High-Speed HTML5 Canvas Image Compression Utility
+  const compressImageFile = (file) => {
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const img = new Image();
+        img.onload = () => {
+          const MAX_WIDTH = 1000;
+          const MAX_HEIGHT = 1000;
+          let width = img.width;
+          let height = img.height;
+
+          if (width > MAX_WIDTH || height > MAX_HEIGHT) {
+            if (width > height) {
+              height = Math.round((height * MAX_WIDTH) / width);
+              width = MAX_WIDTH;
+            } else {
+              width = Math.round((width * MAX_HEIGHT) / height);
+              height = MAX_HEIGHT;
+            }
+          }
+
+          const canvas = document.createElement('canvas');
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, width, height);
+
+          // Compress image to optimized JPEG format (quality 0.78)
+          const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.78);
+          resolve(compressedDataUrl);
+        };
+        img.onerror = () => resolve(e.target.result);
+        img.src = e.target.result;
+      };
+      reader.onerror = () => resolve('');
+      reader.readAsDataURL(file);
+    });
+  };
+
+  // Multi-Image Upload & Management Handlers with Automatic Compression
+  const handleMultipleFileUpload = async (e) => {
     const files = Array.from(e.target.files);
     if (!files.length) return;
 
-    files.forEach(file => {
-      if (file.size > 8 * 1024 * 1024) {
-        alert(`L'image ${file.name} dépasse 8 Mo.`);
-        return;
+    for (const file of files) {
+      if (file.size > 12 * 1024 * 1024) {
+        alert(`L'image ${file.name} dépasse 12 Mo.`);
+        continue;
       }
-      const reader = new FileReader();
-      reader.onloadend = () => {
+      const compressedDataUrl = await compressImageFile(file);
+      if (compressedDataUrl) {
         setProductForm(prev => {
           const currentImages = prev.images || [];
-          const updated = [...currentImages, reader.result];
+          const updated = [...currentImages, compressedDataUrl];
           return {
             ...prev,
             images: updated,
-            image: prev.image || reader.result
+            image: prev.image || compressedDataUrl
           };
         });
-      };
-      reader.readAsDataURL(file);
-    });
+      }
+    }
   };
 
   const handleAddUrlImage = (e) => {
@@ -475,8 +560,18 @@ CREATE POLICY "Admin All avis" ON public.reviews FOR ALL USING (true);`;
   // Product Handlers
   const handleSaveProduct = (e) => {
     e.preventDefault();
-    if (!productForm.name || !productForm.price || !productForm.category) {
-      alert('Veuillez remplir le nom, le prix et la catégorie.');
+    const effectiveCategory = productForm.category || categories[0]?.id || '';
+
+    if (!productForm.name || !productForm.name.trim()) {
+      alert('Veuillez entrer le nom du produit.');
+      return;
+    }
+    if (productForm.price === '' || productForm.price === null || productForm.price === undefined || isNaN(Number(productForm.price))) {
+      alert('Veuillez entrer le prix du produit.');
+      return;
+    }
+    if (!effectiveCategory) {
+      alert('Veuillez d\'abord créer au moins une catégorie dans l\'onglet Catégories.');
       return;
     }
 
@@ -498,6 +593,7 @@ CREATE POLICY "Admin All avis" ON public.reviews FOR ALL USING (true);`;
 
     saveProduct({
       ...productForm,
+      category: effectiveCategory,
       price: numericPrice,
       originalPrice: finalOriginalPrice,
       stock: Number(productForm.stock),
@@ -661,40 +757,61 @@ CREATE POLICY "Admin All avis" ON public.reviews FOR ALL USING (true);`;
               {/* Middle Grid: Weekly Sales Chart & Stock Alerts */}
               <div style={{ width: '100%', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '2rem', boxSizing: 'border-box' }}>
                 
-                {/* Visual SVG Sales Chart */}
+                {/* Visual Sales Chart */}
                 <div className="glass-panel" style={{ padding: '1.75rem', background: '#ffffff', borderRadius: '16px', boxSizing: 'border-box' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
                     <h3 className="font-display" style={{ fontSize: '1.2rem', fontWeight: 800, color: '#0f172a', display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
                       <TrendingUp size={20} color="#2563eb" /> Évolution des Ventes Hebdomadaires
                     </h3>
-                    <span className="font-mono" style={{ fontSize: '0.75rem', color: '#64748b' }}>Cette semaine</span>
+                    <span className="font-mono" style={{ fontSize: '0.75rem', color: '#64748b', background: '#f1f5f9', padding: '0.35rem 0.75rem', borderRadius: '20px', fontWeight: 700 }}>
+                      7 derniers jours
+                    </span>
                   </div>
 
-                  <div style={{ height: '220px', display: 'flex', alignItems: 'flex-end', gap: '1rem', paddingTop: '1.5rem', borderBottom: '1px solid #e2e8f0' }}>
-                    {weeklySalesData.map((item, idx) => {
-                      const heightPercent = Math.round((item.sales / maxSales) * 100);
-                      return (
-                        <div key={idx} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', height: '100%', justifyContent: 'flex-end' }}>
-                          <div className="font-mono" style={{ fontSize: '0.7rem', color: '#64748b', marginBottom: '0.4rem', fontWeight: 700 }}>
-                            {Math.round(item.sales / 1000)}k
+                  <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                    <div style={{ display: 'flex', alignItems: 'flex-end', gap: '0.75rem', height: '190px', padding: '0.5rem 0', borderBottom: '1px solid #e2e8f0' }}>
+                      {weeklySalesData.map((item, idx) => {
+                        const heightPercent = maxSales > 0 ? Math.round((item.sales / maxSales) * 100) : 0;
+                        return (
+                          <div key={idx} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', height: '100%', justifyContent: 'flex-end' }}>
+                            {/* Amount label at top of column */}
+                            <div className="font-mono" style={{ fontSize: '0.7rem', color: item.sales > 0 ? '#2563eb' : '#94a3b8', fontWeight: 700, marginBottom: '0.35rem', whiteSpace: 'nowrap' }}>
+                              {item.sales > 0 ? (item.sales >= 1000000 ? `${(item.sales / 1000000).toFixed(1)}M` : `${Math.round(item.sales / 1000)}k`) : '0'}
+                            </div>
+                            
+                            {/* Bar track container with flex: 1 */}
+                            <div style={{ width: '100%', flex: 1, display: 'flex', alignItems: 'flex-end', justifyContent: 'center', background: '#f8fafc', borderRadius: '8px', padding: '2px 0' }}>
+                              <div 
+                                style={{
+                                  width: '100%',
+                                  maxWidth: '32px',
+                                  height: `${Math.max(heightPercent, item.sales > 0 ? 8 : 4)}%`,
+                                  background: item.isToday 
+                                    ? 'linear-gradient(180deg, #3b82f6 0%, #1d4ed8 100%)'
+                                    : (item.sales > 0 ? 'linear-gradient(180deg, #60a5fa 0%, #2563eb 100%)' : '#e2e8f0'),
+                                  borderRadius: '6px 6px 2px 2px',
+                                  transition: 'height 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+                                  boxShadow: item.isToday && item.sales > 0 ? '0 4px 12px rgba(37, 99, 235, 0.3)' : 'none'
+                                }}
+                                title={`${item.day} (${item.dateStr}) : ${formatCurrency(item.sales)}`}
+                              />
+                            </div>
+
+                            {/* Day label at bottom of column */}
+                            <div style={{ marginTop: '0.5rem', textAlign: 'center' }}>
+                              <span style={{ fontSize: '0.78rem', color: item.isToday ? '#2563eb' : '#475569', fontWeight: item.isToday ? 800 : 600, display: 'block' }}>
+                                {item.day}
+                              </span>
+                              {item.isToday && (
+                                <span style={{ fontSize: '0.62rem', background: '#dbeafe', color: '#1e40af', padding: '0.05rem 0.3rem', borderRadius: '4px', fontWeight: 700 }}>
+                                  Auj.
+                                </span>
+                              )}
+                            </div>
                           </div>
-                          <div 
-                            style={{
-                              width: '100%',
-                              maxWidth: '36px',
-                              height: `${heightPercent}%`,
-                              background: idx === 5 ? '#0f172a' : '#2563eb',
-                              borderRadius: '8px 8px 0 0',
-                              transition: 'height 0.5s ease'
-                            }}
-                            title={`${item.day}: ${formatCurrency(item.sales)}`}
-                          />
-                          <span style={{ fontSize: '0.8rem', color: '#0f172a', fontWeight: 700, marginTop: '0.6rem' }}>
-                            {item.day}
-                          </span>
-                        </div>
-                      );
-                    })}
+                        );
+                      })}
+                    </div>
                   </div>
                 </div>
 
@@ -972,7 +1089,7 @@ CREATE POLICY "Admin All avis" ON public.reviews FOR ALL USING (true);`;
                       <label className="form-label">Catégorie *</label>
                       <select
                         className="form-select"
-                        value={productForm.category}
+                        value={productForm.category || categories[0]?.id || ''}
                         onChange={(e) => setProductForm({ ...productForm, category: e.target.value })}
                         required
                       >
@@ -1555,6 +1672,28 @@ CREATE POLICY "Admin All avis" ON public.reviews FOR ALL USING (true);`;
                     📋 Copier le Lien
                   </button>
                 </div>
+              </div>
+
+              {/* Cache Purge & Mobile Data Sync Card */}
+              <div className="glass-card" style={{ padding: '1.25rem', marginTop: '1.5rem', background: '#fef2f2', borderColor: '#fecaca' }}>
+                <div style={{ fontWeight: 800, color: '#991b1b', marginBottom: '0.4rem', fontSize: '0.92rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                  🧹 Maintenance & Purge du Cache Mobile / Navigateur
+                </div>
+                <div style={{ fontSize: '0.82rem', color: '#7f1d1d', marginBottom: '0.85rem', lineHeight: 1.5 }}>
+                  Si les anciennes données ou anciens produits continuent de s'afficher sur votre téléphone, cela est dû au stockage local (LocalStorage / Cache PWA) propre à votre navigateur mobile.
+                </div>
+                <button 
+                  type="button"
+                  className="btn btn-danger"
+                  style={{ width: '100%', justifyContent: 'center', padding: '0.75rem', fontSize: '0.85rem' }}
+                  onClick={() => {
+                    if (confirm('Voulez-vous réinitialiser le stockage local et le cache du navigateur pour recharger des données fraîches ?')) {
+                      resetAllDataToDefaults();
+                    }
+                  }}
+                >
+                  🔄 Purger le Cache & Recharger les Données Fraîches
+                </button>
               </div>
             </div>
           )}
