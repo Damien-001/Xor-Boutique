@@ -35,195 +35,10 @@ const INITIAL_SETTINGS = {
   notificationsEnabled: true
 };
 
-const INITIAL_CATEGORIES = [
-  {
-    id: 'cat_femme',
-    name: 'Femme',
-    slug: 'femme',
-    description: 'Collection haute couture, robes, sacs et accessoires pour femme.',
-    icon: 'Sparkles',
-    color: '#f472b6',
-    count: 12
-  },
-  {
-    id: 'cat_homme',
-    name: 'Homme',
-    slug: 'homme',
-    description: 'Vestes, montres et mode élégante pour homme moderne.',
-    icon: 'User',
-    color: '#60a5fa',
-    count: 10
-  },
-  {
-    id: 'cat_gadgets',
-    name: 'Gadgets',
-    slug: 'gadgets',
-    description: 'Appareils high-tech, audio haute fidélité et objets connectés.',
-    icon: 'Cpu',
-    color: '#a78bfa',
-    count: 8
-  },
-  {
-    id: 'cat_accessoires',
-    name: 'Accessoires',
-    slug: 'accessoires',
-    description: 'Bijoux, lunettes de soleil et maroquinerie de luxe.',
-    icon: 'Watch',
-    color: '#fbbf24',
-    count: 6
-  }
-];
-
-const INITIAL_PRODUCTS = [
-  {
-    id: 'prod_1',
-    name: 'Sac à Main Cuir Signature DamShop',
-    category: 'cat_femme',
-    price: 85000,
-    originalPrice: 110000,
-    rating: 4.9,
-    stock: 12,
-    isFeatured: true,
-    sizes: ['Unique'],
-    colors: ['Noir Marbre', 'Bordeaux', 'Beige Doré'],
-    image: 'https://images.unsplash.com/photo-1584917865442-de89df76afd3?auto=format&fit=crop&q=80&w=800',
-    description: 'Sac en cuir véritable finition artisanale avec détails dorés. Spacieux et élégant pour le quotidien et les soirées.'
-  },
-  {
-    id: 'prod_2',
-    name: 'Écouteurs Noise-Canceling Phantom X',
-    category: 'cat_gadgets',
-    price: 145000,
-    originalPrice: 175000,
-    rating: 4.8,
-    stock: 8,
-    isFeatured: true,
-    sizes: ['Standard'],
-    colors: ['Noir Noir', 'Argent Brossé'],
-    image: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&q=80&w=800',
-    description: 'Réduction de bruit active avancée, autonomie 40 heures et qualité sonore audiophile Hi-Res Audio.'
-  },
-  {
-    id: 'prod_3',
-    name: 'Montre Chronographe Noir Mat',
-    category: 'cat_homme',
-    price: 120000,
-    originalPrice: 150000,
-    rating: 4.7,
-    stock: 3,
-    isFeatured: true,
-    sizes: ['42mm', '44mm'],
-    colors: ['Noir Onyx', 'Bleu Nuit'],
-    image: 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&q=80&w=800',
-    description: 'Mouvement automatique suisse, verre saphir inrayable et bracelet en acier brossé noir mat.'
-  },
-  {
-    id: 'prod_4',
-    name: 'Robe de Soirée Émeraude Silk',
-    category: 'cat_femme',
-    price: 95000,
-    originalPrice: 125000,
-    rating: 5.0,
-    stock: 0,
-    isFeatured: false,
-    sizes: ['S', 'M', 'L', 'XL'],
-    colors: ['Vert Émeraude', 'Rouge Rubis'],
-    image: 'https://images.unsplash.com/photo-1595777457583-95e059d581b8?auto=format&fit=crop&q=80&w=800',
-    description: 'Robe longue en soie naturelle émeraude avec coupe fluide et décolleté élégant.'
-  },
-  {
-    id: 'prod_5',
-    name: 'Enceinte Bluetooth Minimaliste Velvet',
-    category: 'cat_gadgets',
-    price: 65000,
-    originalPrice: 80000,
-    rating: 4.6,
-    stock: 15,
-    isFeatured: true,
-    sizes: ['Compact'],
-    colors: ['Gris Anthracite', 'Blanc Pur'],
-    image: 'https://images.unsplash.com/photo-1545454675-3531b543be5d?auto=format&fit=crop&q=80&w=800',
-    description: 'Son à 360° immersif, étanche IPX7 et boîtier en aluminium brossé au design épuré.'
-  },
-  {
-    id: 'prod_6',
-    name: 'Veste Blazer Tailored Homme',
-    category: 'cat_homme',
-    price: 110000,
-    originalPrice: 135000,
-    rating: 4.8,
-    stock: 9,
-    isFeatured: false,
-    sizes: ['48', '50', '52', '54'],
-    colors: ['Bleu Marine', 'Gris Laine'],
-    image: 'https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&q=80&w=800',
-    description: 'Veste sur-mesure en laine peignée premium avec doublure en satin d’exception.'
-  },
-  {
-    id: 'prod_7',
-    name: 'Lunettes de Soleil Titane Gold',
-    category: 'cat_accessoires',
-    price: 55000,
-    originalPrice: 70000,
-    rating: 4.9,
-    stock: 2,
-    isFeatured: false,
-    sizes: ['Unique'],
-    colors: ['Or 18k', 'Argent'],
-    image: 'https://images.unsplash.com/photo-1511499767150-a48a237f0083?auto=format&fit=crop&q=80&w=800',
-    description: 'Monture ultra-légère en titane doré avec verres polarisés UV400 haute définition.'
-  },
-  {
-    id: 'prod_8',
-    name: 'Drone de Poche Ultra HD Horizon X',
-    category: 'cat_gadgets',
-    price: 280000,
-    originalPrice: 320000,
-    rating: 4.9,
-    stock: 4,
-    isFeatured: true,
-    sizes: ['Pro Pack'],
-    colors: ['Carbone Mat'],
-    image: 'https://images.unsplash.com/photo-1507582020474-9a35b7d455d9?auto=format&fit=crop&q=80&w=800',
-    description: 'Caméra 4K HDR stabilisée sur 3 axes, capteurs d’obstacles et pilotage autonome par IA.'
-  }
-];
-
-const INITIAL_REVIEWS = [
-  {
-    id: 'rev_1',
-    productId: 'prod_1',
-    userName: 'Mariam K.',
-    rating: 5,
-    comment: 'Qualité incroyable ! Le cuir est magnifique et le sac est encore plus beau en vrai.',
-    date: '2026-07-20'
-  },
-  {
-    id: 'rev_2',
-    productId: 'prod_2',
-    userName: 'Koffi A.',
-    rating: 5,
-    comment: 'Le réducteur de bruit est bluffant. Livraison en moins de 24h à Abidjan.',
-    date: '2026-07-22'
-  }
-];
-
-const INITIAL_ORDERS = [
-  {
-    id: 'DS-9821',
-    customerName: 'Jean Dupont',
-    email: 'jean.dupont@example.com',
-    phone: '+225 0708091011',
-    date: '2026-07-24',
-    total: 210000,
-    paymentMethod: 'Mobile Money (Orange)',
-    status: 'Expédié',
-    items: [
-      { name: 'Écouteurs Noise-Canceling Phantom X', quantity: 1, price: 145000, size: 'Standard', color: 'Noir Noir' },
-      { name: 'Enceinte Bluetooth Minimaliste Velvet', quantity: 1, price: 65000, size: 'Compact', color: 'Gris Anthracite' }
-    ]
-  }
-];
+const INITIAL_CATEGORIES = [];
+const INITIAL_PRODUCTS = [];
+const INITIAL_REVIEWS = [];
+const INITIAL_ORDERS = [];
 
 // Event Listeners for Live Reactive State Updates & Order Notifications
 const listeners = new Set();
@@ -316,11 +131,15 @@ export const saveSettings = (newSettings) => {
 export const getCategories = () => {
   const data = localStorage.getItem('damshop_categories');
   if (!data) {
-    safeSetLocalStorage('damshop_categories', INITIAL_CATEGORIES);
-    setItem('categories', INITIAL_CATEGORIES);
-    return INITIAL_CATEGORIES;
+    safeSetLocalStorage('damshop_categories', []);
+    setItem('categories', []);
+    return [];
   }
-  return JSON.parse(data);
+  try {
+    return JSON.parse(data);
+  } catch (e) {
+    return [];
+  }
 };
 
 export const saveCategory = (categoryData) => {
@@ -367,11 +186,15 @@ export const deleteCategory = (id) => {
 export const getProducts = () => {
   const data = localStorage.getItem('damshop_products');
   if (!data) {
-    safeSetLocalStorage('damshop_products', INITIAL_PRODUCTS);
-    setItem('products', INITIAL_PRODUCTS);
-    return INITIAL_PRODUCTS;
+    safeSetLocalStorage('damshop_products', []);
+    setItem('products', []);
+    return [];
   }
-  return JSON.parse(data);
+  try {
+    return JSON.parse(data);
+  } catch (e) {
+    return [];
+  }
 };
 
 export const saveProduct = (productData) => {
@@ -600,11 +423,15 @@ export const clearCart = () => {
 export const getOrders = () => {
   const data = localStorage.getItem('damshop_orders');
   if (!data) {
-    localStorage.setItem('damshop_orders', JSON.stringify(INITIAL_ORDERS));
-    setItem('orders', INITIAL_ORDERS);
-    return INITIAL_ORDERS;
+    localStorage.setItem('damshop_orders', JSON.stringify([]));
+    setItem('orders', []);
+    return [];
   }
-  return JSON.parse(data);
+  try {
+    return JSON.parse(data);
+  } catch (e) {
+    return [];
+  }
 };
 
 // Admin Notification System
