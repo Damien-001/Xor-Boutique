@@ -1,12 +1,17 @@
 import React from 'react';
-import { LayoutGrid, Sparkles, User, Cpu, Watch, Tag } from 'lucide-react';
+import { LayoutGrid, Sparkles, User, Cpu, Watch, Tag, Shirt, Smartphone, Crown, Heart, ShoppingBag } from 'lucide-react';
 
 const ICON_MAP = {
   Sparkles,
   User,
   Cpu,
   Watch,
-  Tag
+  Tag,
+  Shirt,
+  Smartphone,
+  Crown,
+  Heart,
+  ShoppingBag
 };
 
 export default function CategoryFilter({ categories, activeCategory, onSelectCategory }) {

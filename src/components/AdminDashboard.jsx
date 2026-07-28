@@ -38,7 +38,15 @@ import {
   FileText,
   MessageCircle,
   Menu,
-  X
+  X,
+  User,
+  Cpu,
+  Watch,
+  Tag,
+  Shirt,
+  Smartphone,
+  Crown,
+  Heart
 } from 'lucide-react';
 import { 
   getCategories, 
@@ -72,7 +80,19 @@ import AdminSidebar from './admin/AdminSidebar';
 import AdminHeader from './admin/AdminHeader';
 import AdminCustomersTab from './admin/AdminCustomersTab';
 
-const AVAILABLE_ICONS = ['Sparkles', 'User', 'Cpu', 'Watch', 'Tag'];
+const ICON_MAP = {
+  Sparkles,
+  ShoppingBag,
+  Shirt,
+  Smartphone,
+  Watch,
+  User,
+  Cpu,
+  Tag,
+  Crown,
+  Heart
+};
+const AVAILABLE_ICONS = Object.keys(ICON_MAP);
 
 export default function AdminDashboard({ 
   categories, 
@@ -997,26 +1017,34 @@ CREATE POLICY "Admin All avis" ON public.reviews FOR ALL USING (true);`;
 
                   <div className="form-group" style={{ marginBottom: '1.5rem' }}>
                     <label className="form-label">Icône de l'application</label>
-                    <div style={{ display: 'flex', gap: '0.5rem' }}>
-                      {AVAILABLE_ICONS.map(iconName => (
-                        <button
-                          type="button"
-                          key={iconName}
-                          onClick={() => setCategoryForm({ ...categoryForm, icon: iconName })}
-                          style={{
-                            padding: '0.5rem 0.8rem',
-                            borderRadius: '8px',
-                            border: categoryForm.icon === iconName ? '2px solid #0f172a' : '1px solid #cbd5e1',
-                            background: categoryForm.icon === iconName ? '#0f172a' : '#f8fafc',
-                            color: categoryForm.icon === iconName ? '#ffffff' : '#0f172a',
-                            cursor: 'pointer',
-                            fontWeight: 600,
-                            fontSize: '0.85rem'
-                          }}
-                        >
-                          {iconName}
-                        </button>
-                      ))}
+                    <div style={{ display: 'flex', gap: '0.6rem', flexWrap: 'wrap', alignItems: 'center' }}>
+                      {AVAILABLE_ICONS.map(iconName => {
+                        const IconComponent = ICON_MAP[iconName] || Sparkles;
+                        const isSelected = categoryForm.icon === iconName;
+                        return (
+                          <button
+                            type="button"
+                            key={iconName}
+                            onClick={() => setCategoryForm({ ...categoryForm, icon: iconName })}
+                            title={`Icône ${iconName}`}
+                            style={{
+                              padding: '0.65rem 0.85rem',
+                              borderRadius: '12px',
+                              border: isSelected ? '2px solid #2563eb' : '1px solid #cbd5e1',
+                              background: isSelected ? '#eff6ff' : '#ffffff',
+                              color: isSelected ? '#2563eb' : '#475569',
+                              cursor: 'pointer',
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              transition: 'all 0.2s ease',
+                              boxShadow: isSelected ? '0 4px 12px rgba(37, 99, 235, 0.2)' : 'none'
+                            }}
+                          >
+                            <IconComponent size={22} color={isSelected ? '#2563eb' : '#475569'} />
+                          </button>
+                        );
+                      })}
                     </div>
                   </div>
 
@@ -1047,35 +1075,40 @@ CREATE POLICY "Admin All avis" ON public.reviews FOR ALL USING (true);`;
                 </h3>
                 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                  {categories.map(cat => (
-                    <div key={cat.id} className="glass-card" style={{ padding: '1.25rem 1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#ffffff', borderRadius: '16px' }}>
-                      <div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '0.25rem' }}>
-                          <span style={{ width: '14px', height: '14px', borderRadius: '50%', background: cat.color }}></span>
-                          <h4 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#0f172a' }}>{cat.name}</h4>
-                          <span className="badge badge-blue">{cat.count || 0} produits</span>
+                  {categories.map(cat => {
+                    const IconComp = ICON_MAP[cat.icon] || Sparkles;
+                    return (
+                      <div key={cat.id} className="glass-card" style={{ padding: '1.25rem 1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#ffffff', borderRadius: '16px' }}>
+                        <div>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '0.25rem' }}>
+                            <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: `${cat.color}20`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                              <IconComp size={20} color={cat.color || '#2563eb'} />
+                            </div>
+                            <h4 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#0f172a' }}>{cat.name}</h4>
+                            <span className="badge badge-blue">{cat.count || 0} produits</span>
+                          </div>
+                          <p style={{ color: '#64748b', fontSize: '0.88rem' }}>{cat.description || 'Aucune description'}</p>
                         </div>
-                        <p style={{ color: '#64748b', fontSize: '0.88rem' }}>{cat.description || 'Aucune description'}</p>
-                      </div>
 
-                      <div style={{ display: 'flex', gap: '0.5rem' }}>
-                        <button 
-                          className="btn btn-secondary" 
-                          style={{ padding: '0.5rem 0.75rem' }}
-                          onClick={() => handleEditCategory(cat)}
-                        >
-                          <Edit3 size={16} />
-                        </button>
-                        <button 
-                          className="btn btn-danger" 
-                          style={{ padding: '0.5rem 0.75rem' }}
-                          onClick={() => handleDeleteCategory(cat.id)}
-                        >
-                          <Trash2 size={16} />
-                        </button>
+                        <div style={{ display: 'flex', gap: '0.5rem' }}>
+                          <button 
+                            className="btn btn-secondary" 
+                            style={{ padding: '0.5rem 0.75rem' }}
+                            onClick={() => handleEditCategory(cat)}
+                          >
+                            <Edit3 size={16} />
+                          </button>
+                          <button 
+                            className="btn btn-danger" 
+                            style={{ padding: '0.5rem 0.75rem' }}
+                            onClick={() => handleDeleteCategory(cat.id)}
+                          >
+                            <Trash2 size={16} />
+                          </button>
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
 
