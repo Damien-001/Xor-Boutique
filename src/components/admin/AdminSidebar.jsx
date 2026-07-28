@@ -41,7 +41,7 @@ export default function AdminSidebar({
 
   return (
     <aside 
-      className={isMobile ? "admin-mobile-drawer animate-fade-in" : "glass-panel admin-sidebar-desktop"} 
+      className={isMobile ? "admin-mobile-drawer animate-slide-right" : "glass-panel admin-sidebar-desktop"} 
       onClick={(e) => isMobile && e.stopPropagation()}
       style={{
         position: isMobile ? 'fixed' : 'sticky',
@@ -49,17 +49,18 @@ export default function AdminSidebar({
         right: isMobile ? 0 : 'auto',
         left: isMobile ? 'auto' : 0,
         bottom: 0,
-        width: isMobile ? '285px' : '260px',
-        height: isMobile ? '100vh' : '100%',
-        maxHeight: isMobile ? '100vh' : 'calc(100vh - 100px)',
+        width: isMobile ? '295px' : '260px',
+        maxWidth: isMobile ? '85vw' : '100%',
+        height: isMobile ? '100dvh' : '100%',
+        maxHeight: isMobile ? '100dvh' : 'calc(100vh - 100px)',
         padding: isMobile ? '1.75rem 1.25rem calc(5.5rem + env(safe-area-inset-bottom, 0px)) 1.25rem' : '1.75rem 1.25rem',
         background: '#ffffff',
         display: 'flex',
         flexDirection: 'column',
         justifyContent: 'space-between',
         borderColor: '#e2e8f0',
-        borderRadius: isMobile ? '16px 0 0 16px' : '16px',
-        boxShadow: isMobile ? '-10px 0 35px rgba(15, 23, 42, 0.25)' : '0 4px 20px rgba(0,0,0,0.03)',
+        borderRadius: isMobile ? '20px 0 0 20px' : '16px',
+        boxShadow: isMobile ? '-15px 0 45px rgba(15, 23, 42, 0.3)' : '0 4px 20px rgba(0,0,0,0.03)',
         boxSizing: 'border-box',
         overflowY: 'auto',
         overscrollBehavior: 'contain',

@@ -225,8 +225,17 @@ body {
   to { opacity: 1; transform: translateY(0); }
 }
 
+@keyframes slideInRight {
+  from { transform: translateX(100%); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+
 .animate-fade-in {
   animation: fadeIn 0.3s ease-out forwards;
+}
+
+.animate-slide-right {
+  animation: slideInRight 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 /* Printable Invoice Styles */
@@ -322,7 +331,7 @@ body.drawer-open {
   width: 100% !important;
 }
 
-/* Strict Fixed Positioning for Mobile Sidebar Drawers (RIGHT SIDE) */
+/* Strict Mobile Drawer Rules - State-of-the-Art Full Height Native Drawer */
 .admin-mobile-drawer {
   position: fixed !important;
   top: 0 !important;
@@ -333,15 +342,22 @@ body.drawer-open {
   height: 100dvh !important;
   max-height: 100vh !important;
   max-height: 100dvh !important;
-  width: 285px !important;
+  width: 295px !important;
+  max-width: 85vw !important;
+  margin: 0 !important;
+  border-top: none !important;
+  border-bottom: none !important;
+  border-right: none !important;
+  border-left: 1px solid #cbd5e1 !important;
+  border-radius: 20px 0 0 20px !important;
   z-index: 360 !important;
   background: #ffffff !important;
-  box-shadow: -10px 0 35px rgba(15, 23, 42, 0.25) !important;
-  border-radius: 16px 0 0 16px !important;
+  box-shadow: -15px 0 45px rgba(15, 23, 42, 0.3) !important;
   padding: 1.75rem 1.25rem calc(5.5rem + env(safe-area-inset-bottom, 0px)) 1.25rem !important;
   overflow-y: auto !important;
   overscroll-behavior: contain !important;
   -webkit-overflow-scrolling: touch !important;
+  animation: slideInRight 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards !important;
 }
 
 .admin-drawer-overlay {
