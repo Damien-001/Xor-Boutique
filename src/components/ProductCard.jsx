@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Star, ShoppingBag, Eye, Heart, AlertTriangle, Share2, Check, MessageCircle } from 'lucide-react';
+import { Star, ShoppingBag, Eye, Heart, AlertTriangle, Share2, Check, MessageCircle, ChevronLeft, ChevronRight } from 'lucide-react';
 import { formatCurrency, getSettings } from '../services/store';
 
 export default function ProductCard({ 
@@ -112,40 +112,107 @@ export default function ProductCard({
           )}
         </div>
 
-        {/* Multi-Photo Counter Badge & Dots Overlay */}
+        {/* Multi-Photo Left/Right Navigation Arrows & Dots Overlay */}
         {productImages.length > 1 && (
-          <div 
-            onClick={(e) => e.stopPropagation()}
-            style={{
-              position: 'absolute',
-              bottom: '8px',
-              left: '50%',
-              transform: 'translateX(-50%)',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '5px',
-              background: 'rgba(15, 23, 42, 0.65)',
-              backdropFilter: 'blur(4px)',
-              padding: '0.2rem 0.6rem',
-              borderRadius: '20px',
-              zIndex: 5
-            }}
-          >
-            {productImages.map((_, idx) => (
-              <span
-                key={idx}
-                onClick={() => setCardImgIndex(idx)}
-                style={{
-                  width: cardImgIndex === idx ? '10px' : '6px',
-                  height: '6px',
-                  borderRadius: '3px',
-                  background: cardImgIndex === idx ? '#ffffff' : 'rgba(255,255,255,0.4)',
-                  cursor: 'pointer',
-                  transition: 'all 0.2s ease'
-                }}
-              />
-            ))}
-          </div>
+          <>
+            {/* Previous Image Arrow (Left) */}
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                setCardImgIndex((prev) => (prev === 0 ? productImages.length - 1 : prev - 1));
+              }}
+              style={{
+                position: 'absolute',
+                top: '50%',
+                left: '8px',
+                transform: 'translateY(-50%)',
+                background: 'rgba(255, 255, 255, 0.88)',
+                backdropFilter: 'blur(4px)',
+                border: '1px solid rgba(226, 232, 240, 0.8)',
+                borderRadius: '50%',
+                width: '32px',
+                height: '32px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: '#0f172a',
+                cursor: 'pointer',
+                boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
+                zIndex: 7,
+                transition: 'all 0.2s ease'
+              }}
+              title="Photo précédente"
+            >
+              <ChevronLeft size={18} />
+            </button>
+
+            {/* Next Image Arrow (Right) */}
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                setCardImgIndex((prev) => (prev === productImages.length - 1 ? 0 : prev + 1));
+              }}
+              style={{
+                position: 'absolute',
+                top: '50%',
+                right: '8px',
+                transform: 'translateY(-50%)',
+                background: 'rgba(255, 255, 255, 0.88)',
+                backdropFilter: 'blur(4px)',
+                border: '1px solid rgba(226, 232, 240, 0.8)',
+                borderRadius: '50%',
+                width: '32px',
+                height: '32px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: '#0f172a',
+                cursor: 'pointer',
+                boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
+                zIndex: 7,
+                transition: 'all 0.2s ease'
+              }}
+              title="Photo suivante"
+            >
+              <ChevronRight size={18} />
+            </button>
+
+            {/* Dots Counter */}
+            <div 
+              onClick={(e) => e.stopPropagation()}
+              style={{
+                position: 'absolute',
+                bottom: '8px',
+                left: '50%',
+                transform: 'translateX(-50%)',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '5px',
+                background: 'rgba(15, 23, 42, 0.65)',
+                backdropFilter: 'blur(4px)',
+                padding: '0.2rem 0.6rem',
+                borderRadius: '20px',
+                zIndex: 5
+              }}
+            >
+              {productImages.map((_, idx) => (
+                <span
+                  key={idx}
+                  onClick={() => setCardImgIndex(idx)}
+                  style={{
+                    width: cardImgIndex === idx ? '10px' : '6px',
+                    height: '6px',
+                    borderRadius: '3px',
+                    background: cardImgIndex === idx ? '#ffffff' : 'rgba(255,255,255,0.4)',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease'
+                  }}
+                />
+              ))}
+            </div>
+          </>
         )}
 
         {/* Top Right Action Overlay (Share, Eye, Heart Wishlist) */}
