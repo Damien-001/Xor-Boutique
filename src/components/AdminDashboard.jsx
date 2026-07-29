@@ -67,6 +67,7 @@ import {
   downloadInvoiceFile,
   shareOrSendPdfReceipt,
   generateWhatsAppPaidReceiptLink,
+  formatPaymentMethodLabel,
   formatCurrency,
   pushAllDataToSupabase,
   pullDataFromSupabase,
@@ -1550,7 +1551,12 @@ CREATE POLICY "Admin All avis" ON public.reviews FOR ALL USING (true);`;
                     {orders.map(order => (
                       <tr key={order.id} style={{ borderBottom: '1px solid #f1f5f9' }}>
                         <td style={{ padding: '1rem 1.25rem', fontWeight: 700 }} className="font-mono">{order.id}</td>
-                        <td style={{ padding: '1rem 1.25rem', fontWeight: 600 }}>{order.customerName}</td>
+                        <td style={{ padding: '1rem 1.25rem', fontWeight: 600 }}>
+                          <div>{order.customerName}</div>
+                          <div style={{ fontSize: '0.75rem', color: '#2563eb', fontWeight: 500 }}>
+                            {formatPaymentMethodLabel(order.paymentMethod)}
+                          </div>
+                        </td>
                         <td style={{ padding: '1rem 1.25rem' }} className="font-mono">{order.phone}</td>
                         
                         <td style={{ padding: '1rem 1.25rem', fontWeight: 600, color: '#0f172a' }}>

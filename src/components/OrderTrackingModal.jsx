@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { X, Search, CheckCircle2, Clock, MapPin, Package, Download, Phone, MessageCircle } from 'lucide-react';
-import { formatCurrency, downloadInvoiceFile, generateWhatsAppLink } from '../services/store';
+import { formatCurrency, downloadInvoiceFile, generateWhatsAppLink, formatPaymentMethodLabel } from '../services/store';
 
 export default function OrderTrackingModal({ isOpen, onClose, orders, settings }) {
   const [searchQuery, setSearchQuery] = useState('');
@@ -161,7 +161,7 @@ export default function OrderTrackingModal({ isOpen, onClose, orders, settings }
                 <div style={{ fontSize: '0.85rem', marginBottom: '1rem', color: '#334155' }}>
                   <div>Client : <strong>{searchedOrder.customerName}</strong> ({searchedOrder.phone})</div>
                   <div>Livraison à : <strong>📍 {searchedOrder.address}</strong></div>
-                  <div>Paiement : <strong>{searchedOrder.paymentMethod}</strong></div>
+                  <div>Paiement : <strong>{formatPaymentMethodLabel(searchedOrder.paymentMethod)}</strong></div>
                 </div>
 
                 {/* Items List */}

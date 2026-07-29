@@ -1,6 +1,6 @@
 import React from 'react';
 import { X, Printer, CheckCircle2, Download, Sparkles } from 'lucide-react';
-import { formatCurrency, downloadInvoiceFile } from '../services/store';
+import { formatCurrency, downloadInvoiceFile, formatPaymentMethodLabel } from '../services/store';
 
 export default function InvoiceModal({ order, settings, onClose }) {
   if (!order) return null;
@@ -116,7 +116,7 @@ export default function InvoiceModal({ order, settings, onClose }) {
             <div className="form-label" style={{ marginBottom: '0.4rem' }}>Adresse de Livraison & Paiement :</div>
             <div style={{ fontSize: '0.9rem', marginBottom: '0.2rem' }}>{order.address}</div>
             <div style={{ fontSize: '0.85rem', color: '#2563eb', fontWeight: 700 }}>
-              Mode : {order.paymentMethod}
+              Mode : {formatPaymentMethodLabel(order.paymentMethod)}
             </div>
           </div>
         </div>

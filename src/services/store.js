@@ -571,10 +571,40 @@ export const deleteOrder = (orderId) => {
   return orders;
 };
 
+// Payment Method Formatter & Sanitizer
+export const formatPaymentMethodLabel = (method) => {
+  if (!method) return 'Paiement à la livraison (Espèces / Cash)';
+  const str = String(method).toLowerCase();
+  if (str.includes('mobile') || str.includes('momo') || str.includes('moov') || str.includes('yas') || str.includes('mixx')) {
+    return 'Mobile Money (Moov Afrique / Mixx by Yas)';
+  }
+  if (str.includes('carte') || str.includes('visa') || str.includes('mastercard') || str.includes('bank')) {
+    return 'Carte Bancaire (Visa / Mastercard)';
+  }
+  if (str.includes('cash') || str.includes('livraison') || str.includes('espèces') || str.includes('espece')) {
+    return 'Paiement Cash à la Livraison (Espèces)';
+  }
+  return String(method)
+    .replace(/[\u{1F600}-\u{1F64F}\u{1F300}-\u{1F5FF}\u{1F680}-\u{1F6FF}\u{1F700}-\u{1F77F}\u{1F780}-\u{1F7FF}\u{1F800}-\u{1F8FF}\u{1F900}-\u{1F9FF}\u{1FA00}-\u{1FA6F}\u{1FA70}-\u{1FAFF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/gu, '')
+    .trim() || 'Paiement à la livraison (Cash)';
+};
+
+// Helper to sanitize strings for jsPDF (removes emojis & unsupported unicode symbols)
+const sanitizeTextForPdf = (str) => {
+  if (str === undefined || str === null) return '';
+  return String(str)
+    .replace(/[\u{1F600}-\u{1F64F}\u{1F300}-\u{1F5FF}\u{1F680}-\u{1F6FF}\u{1F700}-\u{1F77F}\u{1F780}-\u{1F7FF}\u{1F800}-\u{1F8FF}\u{1F900}-\u{1F9FF}\u{1FA00}-\u{1FA6F}\u{1FA70}-\u{1FAFF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/gu, '')
+    .replace(/[’‘]/g, "'")
+    .replace(/[“”]/g, '"')
+    .replace(/–/g, '-')
+    .trim();
+};
+
 // WhatsApp Generator & Formatting
 export const generateWhatsAppLink = (order, settings) => {
   const phone = settings?.whatsappNumber || '2250700000000';
   const storeName = settings?.storeName || 'DamShop';
+  const paymentLabel = formatPaymentMethodLabel(order.paymentMethod);
   let text = `Bonjour *${storeName}* ! 👋\nJe souhaite valider ma commande *N° ${order.id}*.\n\n`;
   text += `👤 *Client :* ${order.customerName}\n`;
   text += `📞 *Tel :* ${order.phone}\n`;
@@ -595,7 +625,7 @@ export const generateWhatsAppLink = (order, settings) => {
   });
 
   text += `\n💰 *TOTAL COMMANDE : ${formatCurrency(order.total)}*\n`;
-  text += `💳 *Mode de Paiement :* ${order.paymentMethod || 'Paiement à la livraison'}\n\n`;
+  text += `💳 *Mode de Paiement :* ${paymentLabel}\n\n`;
   text += `Merci d'avance pour la confirmation et la livraison rapide ! 🚀`;
 
   return `https://wa.me/${phone.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(text)}`;
@@ -603,12 +633,13 @@ export const generateWhatsAppLink = (order, settings) => {
 
 // WhatsApp Paid Receipt Text Message Generator
 export const generateWhatsAppPaidReceiptMessageText = (order, settings) => {
-  const isPaid = order.status === 'Livré & Payé' || order.status === 'Payé';
+  const isPaid = order.status === 'Livré & Payé' || order.status === 'Payé' || order.status === 'Livré';
   const baseUrl = window.location.origin + window.location.pathname;
   const receiptUrl = `${baseUrl}?invoice=${order.id}`;
 
   const itemsSubtotal = (order.items || []).reduce((sum, item) => sum + (Number(item.price || 0) * Number(item.quantity || 1)), 0);
   const deliveryFee = Math.max(0, Number(order.total || 0) - itemsSubtotal);
+  const paymentLabel = formatPaymentMethodLabel(order.paymentMethod);
 
   let text = `Bonjour *${order.customerName}* ! 👋\n`;
   if (isPaid) {
@@ -623,7 +654,7 @@ export const generateWhatsAppPaidReceiptMessageText = (order, settings) => {
   text += `👤 *Client :* ${order.customerName}\n`;
   text += `📞 *Tél :* ${order.phone || order.customerPhone || ''}\n`;
   text += `📍 *Adresse :* ${order.address || order.deliveryAddress || ''}\n`;
-  text += `💳 *Mode :* ${order.paymentMethod}\n\n`;
+  text += `💳 *Mode de Paiement :* ${paymentLabel} (${isPaid ? 'RÉGLÉ / PAYÉ' : 'À RÉGLER À LA LIVRAISON'})\n\n`;
   text += `📦 *Détail des Articles :*\n`;
   (order.items || []).forEach((item) => {
     text += `- ${item.quantity}x ${item.name} (${formatCurrency(item.price * item.quantity)})\n`;
@@ -681,7 +712,7 @@ export const generateInvoicePdfDoc = async (order, settings, forceOfficialInvoic
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(22);
   doc.setTextColor(...primaryColor);
-  doc.text(settings?.storeName || 'DamShop', 20, 24);
+  doc.text(sanitizeTextForPdf(settings?.storeName || 'DamShop'), 20, 24);
   
   doc.setFontSize(9);
   doc.setTextColor(...accentColor);
@@ -690,14 +721,14 @@ export const generateInvoicePdfDoc = async (order, settings, forceOfficialInvoic
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(8.5);
   doc.setTextColor(...grayColor);
-  doc.text(settings?.address || 'Lomé, Togo', 20, 35);
+  doc.text(sanitizeTextForPdf(settings?.address || 'Lomé, Togo'), 20, 35);
 
   // Invoice Title & Status Meta Right
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(13);
   doc.setTextColor(...goldColor);
   const docTitle = isPaid ? `FACTURE ACQUITTÉE N° ${order.id}` : `BON DE COMMANDE N° ${order.id}`;
-  doc.text(docTitle, 190, 24, { align: 'right' });
+  doc.text(sanitizeTextForPdf(docTitle), 190, 24, { align: 'right' });
   
   doc.setFontSize(8.5);
   doc.setTextColor(...grayColor);
@@ -707,7 +738,7 @@ export const generateInvoicePdfDoc = async (order, settings, forceOfficialInvoic
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(isPaid ? 4 : 180, isPaid ? 120 : 83, isPaid ? 87 : 9);
   const statusText = isPaid ? 'STATUT : PAYÉ & ACQUITTÉ (FACTURE OFFICIELLE)' : 'STATUT : À PAYER À LA LIVRAISON';
-  doc.text(statusText, 190, 35, { align: 'right' });
+  doc.text(sanitizeTextForPdf(statusText), 190, 35, { align: 'right' });
 
   // Horizontal Separator Line
   doc.setDrawColor(226, 232, 240);
@@ -723,18 +754,22 @@ export const generateInvoicePdfDoc = async (order, settings, forceOfficialInvoic
   doc.setTextColor(...primaryColor);
   doc.text('CLIENT :', 24, 51);
   doc.setFont('helvetica', 'normal');
-  doc.text(`${order.customerName} (${order.phone || order.customerPhone || ''})`, 40, 51);
+  const clientText = sanitizeTextForPdf(`${order.customerName || ''} (${order.phone || order.customerPhone || ''})`);
+  doc.text(clientText, 40, 51);
 
   doc.setFont('helvetica', 'bold');
   doc.text('LIVRAISON :', 24, 57);
   doc.setFont('helvetica', 'normal');
-  doc.text(`${order.address || order.deliveryAddress || 'Lomé, Togo'}`, 44, 57);
+  const addressText = sanitizeTextForPdf(order.address || order.deliveryAddress || 'Lomé, Togo');
+  doc.text(addressText, 44, 57);
 
   doc.setFont('helvetica', 'bold');
   doc.text('PAIEMENT :', 24, 63);
   doc.setFont('helvetica', 'normal');
   doc.setTextColor(...accentColor);
-  doc.text(`${order.paymentMethod || 'Mobile Money'} (${isPaid ? 'RÉGLÉ' : 'À RÉGLER À LA LIVRAISON'})`, 44, 63);
+  const paymentLabelClean = sanitizeTextForPdf(formatPaymentMethodLabel(order.paymentMethod));
+  const paymentStatusClean = isPaid ? 'RÉGLÉ / PAYÉ' : 'À RÉGLER À LA LIVRAISON';
+  doc.text(`${paymentLabelClean} (${paymentStatusClean})`, 44, 63);
 
   // Table Header Row
   let y = 80;
@@ -758,12 +793,12 @@ export const generateInvoicePdfDoc = async (order, settings, forceOfficialInvoic
   (order.items || []).forEach((item) => {
     doc.setFont('helvetica', 'bold');
     doc.setTextColor(...primaryColor);
-    const cleanName = String(item.name || '').substring(0, 30);
+    const cleanName = sanitizeTextForPdf(item.name || '').substring(0, 30);
     doc.text(cleanName, 23, y);
     
     doc.setFont('helvetica', 'normal');
     doc.setTextColor(...grayColor);
-    const variantText = `${item.size ? 'T:' + item.size : ''} ${item.color ? ' C:' + item.color : ''}`;
+    const variantText = sanitizeTextForPdf(`${item.size ? 'T:' + item.size : ''} ${item.color ? ' C:' + item.color : ''}`);
     doc.text(variantText, 78, y);
 
     doc.setTextColor(...primaryColor);
@@ -820,14 +855,14 @@ export const generateInvoicePdfDoc = async (order, settings, forceOfficialInvoic
   doc.setFontSize(11);
   doc.setTextColor(...goldColor);
   const labelTotal = isPaid ? 'TOTAL PAYÉ & ACQUITTÉ' : 'TOTAL À PAYER À LA LIVRAISON';
-  doc.text(`${labelTotal} : ${formatPdfPrice(totalAmount)}`, 188, y, { align: 'right' });
+  doc.text(sanitizeTextForPdf(`${labelTotal} : ${formatPdfPrice(totalAmount)}`), 188, y, { align: 'right' });
 
   // Footer Copyright
   y += 18;
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(8);
   doc.setTextColor(...grayColor);
-  doc.text('Merci d\'avoir effectué vos achats sur DamShop ! Document officiel.', 105, y, { align: 'center' });
+  doc.text(sanitizeTextForPdf("Merci d'avoir effectué vos achats sur DamShop ! Document officiel."), 105, y, { align: 'center' });
 
   return doc;
 };
@@ -845,40 +880,28 @@ export const downloadInvoiceFile = async (order, settings, forceOfficialInvoice 
   }
 };
 
-// 1-Click Share Native PDF File + Full Text (Mobile) or Download + Link (Desktop)
+// 1-Click WhatsApp Dispatch: Downloads PDF file + Opens WhatsApp (Mobile App & Desktop Web) with full text
 export const shareOrSendPdfReceipt = async (order, settings, forceOfficialInvoice = false) => {
   const isPaid = forceOfficialInvoice || order.status === 'Livré & Payé' || order.status === 'Payé' || order.status === 'Livré';
   const fileNamePrefix = isPaid ? 'Facture_Acquittee' : 'Bon_De_Commande';
   const fileName = `${fileNamePrefix}_DamShop_${order.id}.pdf`;
-  const fullText = generateWhatsAppPaidReceiptMessageText(order, settings);
+  const waUrl = generateWhatsAppPaidReceiptLink(order, settings);
 
+  // 1. Download & save valid PDF file locally to Downloads folder (Mobile & Desktop)
   try {
     const doc = await generateInvoicePdfDoc(order, settings, forceOfficialInvoice);
-
-    // Try Native Mobile File Share API if supported
-    if (navigator.share && navigator.canShare) {
-      const pdfBlob = doc.output('blob');
-      const pdfFile = new File([pdfBlob], fileName, { type: 'application/pdf' });
-
-      if (navigator.canShare({ files: [pdfFile] })) {
-        await navigator.share({
-          title: `Facture DamShop N° ${order.id}`,
-          text: fullText,
-          files: [pdfFile]
-        });
-        return;
-      }
-    }
-
-    // Download PDF file locally
     doc.save(fileName);
   } catch (e) {
-    console.warn('PDF Share Error:', e);
+    console.warn('PDF Download Error:', e);
   }
 
-  // Desktop PC Fallback: Open WhatsApp Web chat with receipt URL link
-  const waUrl = generateWhatsAppPaidReceiptLink(order, settings);
-  window.open(waUrl, '_blank');
+  // 2. Open WhatsApp (App on mobile, Web on desktop) prefilled with full text & 1-click receipt link
+  const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+  if (isMobile) {
+    window.location.href = waUrl;
+  } else {
+    window.open(waUrl, '_blank');
+  }
 };
 
 export const formatCurrency = (amount) => {
