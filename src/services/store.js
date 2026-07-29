@@ -950,36 +950,46 @@ const INITIAL_ADMIN_ACCOUNTS = [
 ];
 
 export const getAdminAccounts = () => {
-  let localAccs = [];
+  let accounts = null;
+
+  // 1. Try reading from localStorage
   const data = localStorage.getItem('damshop_admin_accounts');
   if (data) {
     try {
       const parsed = JSON.parse(data);
-      if (Array.isArray(parsed)) localAccs = parsed;
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        accounts = parsed;
+      }
     } catch (e) {}
   }
 
-  const settings = getSettings();
-  let settingsAccs = [];
-  if (settings && Array.isArray(settings.adminAccounts)) {
-    settingsAccs = settings.adminAccounts;
+  // 2. Fallback to settings.adminAccounts if localStorage is empty
+  if (!accounts) {
+    const settings = getSettings();
+    if (settings && Array.isArray(settings.adminAccounts) && settings.adminAccounts.length > 0) {
+      accounts = settings.adminAccounts;
+    }
   }
 
-  // Merge & deduplicate by username (case-insensitive)
-  const mergedMap = new Map();
-  INITIAL_ADMIN_ACCOUNTS.forEach(a => {
-    if (a.username) mergedMap.set(a.username.trim().toLowerCase(), a);
-  });
-  settingsAccs.forEach(a => {
-    if (a.username) mergedMap.set(a.username.trim().toLowerCase(), a);
-  });
-  localAccs.forEach(a => {
-    if (a.username) mergedMap.set(a.username.trim().toLowerCase(), a);
-  });
+  // 3. Fallback to INITIAL_ADMIN_ACCOUNTS on first load if no storage exists
+  if (!accounts || accounts.length === 0) {
+    accounts = [...INITIAL_ADMIN_ACCOUNTS];
+  }
 
-  const finalAccounts = Array.from(mergedMap.values());
-  safeSetLocalStorage('damshop_admin_accounts', finalAccounts);
-  return finalAccounts;
+  // 4. Always ensure super_admin (owner) exists
+  const hasOwner = accounts.some(a => a.role === 'super_admin' || (a.username || '').trim().toLowerCase() === 'admin');
+  if (!hasOwner) {
+    accounts.unshift({
+      id: 'acc_super',
+      name: 'Propriétaire',
+      username: 'admin',
+      password: 'admin',
+      role: 'super_admin'
+    });
+  }
+
+  safeSetLocalStorage('damshop_admin_accounts', accounts);
+  return accounts;
 };
 
 export const saveAdminAccount = (accountData) => {
