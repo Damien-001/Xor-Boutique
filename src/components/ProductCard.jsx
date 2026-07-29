@@ -14,7 +14,7 @@ export default function ProductCard({
 
   const handleShare = async (e) => {
     e.stopPropagation();
-    const shareUrl = `${window.location.origin}${window.location.pathname}?product=${product.id}`;
+    const shareUrl = `${window.location.origin}/?product=${product.id}`;
     if (navigator.share) {
       try {
         await navigator.share({
@@ -143,86 +143,94 @@ export default function ProductCard({
           </div>
         )}
 
-        {/* Top Right Wishlist Button */}
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            onToggleWishlist(product.id);
-          }}
+        {/* Top Right Action Overlay (Share, Eye, Heart Wishlist) */}
+        <div 
+          onClick={(e) => e.stopPropagation()}
           style={{
             position: 'absolute',
-            top: '12px',
-            right: '12px',
-            background: isWishlisted ? '#fce7f3' : 'rgba(255, 255, 255, 0.9)',
-            backdropFilter: 'blur(4px)',
-            border: isWishlisted ? '1px solid #f472b6' : '1px solid #e2e8f0',
-            borderRadius: '50%',
-            width: '36px',
-            height: '36px',
+            top: '10px',
+            right: '10px',
             display: 'flex',
             alignItems: 'center',
-            justifyContent: 'center',
-            color: isWishlisted ? '#ec4899' : '#0f172a',
-            cursor: 'pointer',
-            boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
-            transition: 'all 0.2s ease'
+            gap: '6px',
+            zIndex: 6
           }}
-          title={isWishlisted ? 'Retirer des favoris' : 'Ajouter aux favoris'}
         >
-          <Heart size={16} fill={isWishlisted ? '#ec4899' : 'none'} color={isWishlisted ? '#ec4899' : '#0f172a'} />
-        </button>
+          {/* Share Button */}
+          <button
+            onClick={handleShare}
+            style={{
+              background: copiedLink ? '#dcfce7' : 'rgba(255, 255, 255, 0.92)',
+              backdropFilter: 'blur(4px)',
+              border: copiedLink ? '1px solid #86efac' : '1px solid #e2e8f0',
+              borderRadius: '50%',
+              width: '34px',
+              height: '34px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: copiedLink ? '#15803d' : '#0f172a',
+              cursor: 'pointer',
+              boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
+              transition: 'all 0.2s ease'
+            }}
+            title={copiedLink ? 'Lien copié !' : 'Partager / Copier le lien du produit'}
+          >
+            {copiedLink ? <Check size={16} color="#15803d" /> : <Share2 size={16} />}
+          </button>
 
-        {/* Share / Copy Direct Product Link Button */}
-        <button
-          onClick={handleShare}
-          style={{
-            position: 'absolute',
-            bottom: '12px',
-            right: '56px',
-            background: copiedLink ? '#dcfce7' : 'rgba(255, 255, 255, 0.95)',
-            backdropFilter: 'blur(4px)',
-            border: copiedLink ? '1px solid #86efac' : '1px solid #e2e8f0',
-            borderRadius: '50%',
-            width: '38px',
-            height: '38px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            color: copiedLink ? '#15803d' : '#0f172a',
-            cursor: 'pointer',
-            boxShadow: '0 2px 10px rgba(0,0,0,0.08)',
-            transition: 'all 0.2s ease'
-          }}
-          title={copiedLink ? 'Lien copié !' : 'Copier le lien direct pour Facebook / TikTok / WhatsApp'}
-        >
-          {copiedLink ? <Check size={18} color="#15803d" /> : <Share2 size={17} />}
-        </button>
+          {/* Quick View (Eye) Button */}
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onQuickView(product);
+            }}
+            style={{
+              background: 'rgba(255, 255, 255, 0.92)',
+              backdropFilter: 'blur(4px)',
+              border: '1px solid #e2e8f0',
+              borderRadius: '50%',
+              width: '34px',
+              height: '34px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: '#0f172a',
+              cursor: 'pointer',
+              boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
+              transition: 'all 0.2s ease'
+            }}
+            title="Aperçu rapide du produit"
+          >
+            <Eye size={16} />
+          </button>
 
-        {/* Quick View Floating Button */}
-        <button
-          onClick={() => onQuickView(product)}
-          style={{
-            position: 'absolute',
-            bottom: '12px',
-            right: '12px',
-            background: 'rgba(255, 255, 255, 0.95)',
-            backdropFilter: 'blur(4px)',
-            border: '1px solid #e2e8f0',
-            borderRadius: '50%',
-            width: '38px',
-            height: '38px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            color: '#0f172a',
-            cursor: 'pointer',
-            boxShadow: '0 2px 10px rgba(0,0,0,0.08)',
-            transition: 'all 0.2s ease'
-          }}
-          title="Aperçu rapide"
-        >
-          <Eye size={18} />
-        </button>
+          {/* Wishlist (Heart) Button */}
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onToggleWishlist(product.id);
+            }}
+            style={{
+              background: isWishlisted ? '#fce7f3' : 'rgba(255, 255, 255, 0.92)',
+              backdropFilter: 'blur(4px)',
+              border: isWishlisted ? '1px solid #f472b6' : '1px solid #e2e8f0',
+              borderRadius: '50%',
+              width: '34px',
+              height: '34px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: isWishlisted ? '#ec4899' : '#0f172a',
+              cursor: 'pointer',
+              boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
+              transition: 'all 0.2s ease'
+            }}
+            title={isWishlisted ? 'Retirer des favoris' : 'Ajouter aux favoris'}
+          >
+            <Heart size={16} fill={isWishlisted ? '#ec4899' : 'none'} color={isWishlisted ? '#ec4899' : '#0f172a'} />
+          </button>
+        </div>
       </div>
 
       {/* Product Details */}
