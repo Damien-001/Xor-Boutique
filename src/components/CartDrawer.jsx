@@ -10,7 +10,7 @@ export default function CartDrawer({ isOpen, onClose, cartItems, onUpdateQuantit
     email: '',
     phone: '',
     address: '',
-    paymentMethod: 'Mobile Money (Moov, Mixx by Yas, Wave, Orange, MTN)'
+    paymentMethod: 'Mobile Money (Moov Afrique, Mixx by Yas)'
   });
   const [placedOrder, setPlacedOrder] = useState(null);
 
@@ -208,7 +208,7 @@ export default function CartDrawer({ isOpen, onClose, cartItems, onUpdateQuantit
                   value={formData.paymentMethod}
                   onChange={(e) => setFormData({ ...formData, paymentMethod: e.target.value })}
                 >
-                  <option value="Mobile Money (Moov, Mixx by Yas, Wave, Orange, MTN)">📱 Mobile Money (Moov Afrique, Mixx by Yas, Wave, Orange, MTN)</option>
+                  <option value="Mobile Money (Moov Afrique, Mixx by Yas)">📱 Mobile Money (Moov Afrique & Mixx by Yas)</option>
                   <option value="Carte Bancaire (Visa/Mastercard)">💳 Carte Bancaire (Visa, Mastercard)</option>
                   <option value="Paiement à la livraison">💵 Paiement Cash à la Livraison</option>
                 </select>
@@ -220,7 +220,7 @@ export default function CartDrawer({ isOpen, onClose, cartItems, onUpdateQuantit
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: '#b45309', fontWeight: 700, marginBottom: '0.3rem' }}>
                     <QrCode size={16} /> Paiement Mobile Money Direct
                   </div>
-                  Effectuez le transfert vers le numéro <strong>{settings?.whatsappNumber || '22890000000'}</strong> (Moov Money / Mixx by Yas / Wave / Orange / MTN) avec la référence de commande qui vous sera attribuée.
+                  Effectuez le transfert vers le numéro <strong>{settings?.whatsappNumber || '22890000000'}</strong> (Moov Money / Mixx by Yas) avec la référence de commande qui vous sera attribuée.
                 </div>
               )}
             </form>

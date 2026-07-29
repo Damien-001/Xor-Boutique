@@ -1674,7 +1674,7 @@ CREATE POLICY "Admin All avis" ON public.reviews FOR ALL USING (true);`;
                   </div>
                   <div className="glass-card" style={{ padding: '1.25rem', background: '#f8fafc', borderRadius: '12px' }}>
                     <div style={{ color: '#64748b', fontSize: '0.8rem', fontWeight: 600, textTransform: 'uppercase' }}>Paiement Préféré</div>
-                    <div style={{ fontSize: '1.1rem', fontWeight: 700, color: '#0f172a', marginTop: '0.25rem' }}>Mobile Money (Moov / Mixx by Yas / Wave / Orange / MTN)</div>
+                    <div style={{ fontSize: '1.1rem', fontWeight: 700, color: '#0f172a', marginTop: '0.25rem' }}>Mobile Money (Moov Afrique & Mixx by Yas)</div>
                   </div>
                 </div>
               </div>
