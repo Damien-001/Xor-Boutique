@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Star, ShoppingBag, Eye, Heart, AlertTriangle, Share2, Check, MessageCircle } from 'lucide-react';
-import { formatCurrency } from '../services/store';
+import { formatCurrency, getSettings } from '../services/store';
 
 export default function ProductCard({ 
   product, 
@@ -11,6 +11,11 @@ export default function ProductCard({
   onToggleWishlist 
 }) {
   const [copiedLink, setCopiedLink] = useState(false);
+  const settings = getSettings();
+  const whatsappNum = (settings?.whatsappNumber || '2250700000000').replace(/[^0-9]/g, '');
+  const storeName = settings?.storeName || 'Xor Boutique';
+  const whatsappProductMessage = `Bonjour ${storeName} ! Je souhaite commander directement l'article : ${product.name} (Prix : ${product.price} FCFA).`;
+  const whatsappProductLink = `https://wa.me/${whatsappNum}?text=${encodeURIComponent(whatsappProductMessage)}`;
 
   const handleShare = async (e) => {
     e.stopPropagation();
@@ -322,7 +327,7 @@ export default function ProductCard({
 
             {!isOutOfStock && (
               <a
-                href={`https://wa.me/2250700000000?text=${encodeURIComponent(`Bonjour Xor Boutique ! Je souhaite commander directement l'article : ${product.name} (Prix : ${product.price} FCFA).`)}`}
+                href={whatsappProductLink}
                 target="_blank"
                 rel="noopener noreferrer"
                 onClick={(e) => e.stopPropagation()}
