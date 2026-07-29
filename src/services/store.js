@@ -954,10 +954,10 @@ export const getAdminAccounts = () => {
 
   // 1. Try reading from localStorage
   const data = localStorage.getItem('damshop_admin_accounts');
-  if (data) {
+  if (data !== null) {
     try {
       const parsed = JSON.parse(data);
-      if (Array.isArray(parsed) && parsed.length > 0) {
+      if (Array.isArray(parsed)) {
         accounts = parsed;
       }
     } catch (e) {}
@@ -966,13 +966,13 @@ export const getAdminAccounts = () => {
   // 2. Fallback to settings.adminAccounts if localStorage is empty
   if (!accounts) {
     const settings = getSettings();
-    if (settings && Array.isArray(settings.adminAccounts) && settings.adminAccounts.length > 0) {
+    if (settings && Array.isArray(settings.adminAccounts)) {
       accounts = settings.adminAccounts;
     }
   }
 
-  // 3. Fallback to INITIAL_ADMIN_ACCOUNTS on first load if no storage exists
-  if (!accounts || accounts.length === 0) {
+  // 3. Fallback to INITIAL_ADMIN_ACCOUNTS on absolute first load if no storage exists
+  if (!accounts) {
     accounts = [...INITIAL_ADMIN_ACCOUNTS];
   }
 
@@ -1027,7 +1027,8 @@ export const saveAdminAccount = (accountData) => {
 };
 
 export const deleteAdminAccount = (id) => {
-  const accounts = getAdminAccounts().filter(a => a.id !== id && a.role !== 'super_admin');
+  // Prevent deleting super_admin. Keep account if id doesn't match OR if role is super_admin
+  const accounts = getAdminAccounts().filter(a => a.id !== id || a.role === 'super_admin');
   safeSetLocalStorage('damshop_admin_accounts', accounts);
   
   const settings = getSettings();
