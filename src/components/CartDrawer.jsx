@@ -18,7 +18,10 @@ export default function CartDrawer({ isOpen, onClose, cartItems, onUpdateQuantit
 
   const validCartItems = Array.isArray(cartItems) ? cartItems.filter(item => item && item.product) : [];
   const subtotal = validCartItems.reduce((acc, item) => acc + ((Number(item.product.price) || 0) * (Number(item.quantity) || 1)), 0);
-  const deliveryFee = subtotal > 0 ? (settings?.deliveryFee || 2500) : 0;
+  const configuredFee = settings?.deliveryFee !== undefined && settings?.deliveryFee !== null ? Number(settings.deliveryFee) : 2500;
+  const minFreeAmount = Number(settings?.freeShippingMinAmount) || 0;
+  const isFreeShipping = minFreeAmount > 0 && subtotal >= minFreeAmount;
+  const deliveryFee = (subtotal > 0 && !isFreeShipping) ? configuredFee : 0;
   const total = subtotal + deliveryFee;
 
   const handleCheckoutSubmit = (e) => {
@@ -318,7 +321,13 @@ export default function CartDrawer({ isOpen, onClose, cartItems, onUpdateQuantit
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem', color: '#64748b', marginBottom: '0.5rem' }}>
                     <span>Livraison :</span>
-                    <span className="font-mono">{formatCurrency(deliveryFee)}</span>
+                    <span className="font-mono">
+                      {isFreeShipping || (deliveryFee === 0 && subtotal > 0) ? (
+                        <span style={{ color: '#059669', fontWeight: 700 }}>Offerte ✨</span>
+                      ) : (
+                        formatCurrency(deliveryFee)
+                      )}
+                    </span>
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '1.15rem', fontWeight: 800, color: '#0f172a' }}>
                     <span>Total :</span>

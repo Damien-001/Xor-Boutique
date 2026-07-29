@@ -1709,11 +1709,28 @@ CREATE POLICY "Admin All avis" ON public.reviews FOR ALL USING (true);`;
                         <input 
                           type="text" 
                           className="form-input" 
-                          placeholder="2250700000000 (avec indicatif pays)"
+                          placeholder="22890000000 (avec indicatif pays)"
                           value={settings.whatsappNumber}
                           onChange={(e) => setSettingsState({ ...settings, whatsappNumber: e.target.value })}
                           required
                         />
+                      </div>
+
+                      <div className="form-group" style={{ marginBottom: '1.25rem' }}>
+                        <label className="form-label">Frais de Livraison Standard (FCFA) *</label>
+                        <input 
+                          type="number" 
+                          className="form-input" 
+                          placeholder="ex: 1500 ou 2500"
+                          value={settings.deliveryFee !== undefined ? settings.deliveryFee : 2500}
+                          onChange={(e) => setSettingsState({ ...settings, deliveryFee: Number(e.target.value) })}
+                          min="0"
+                          step="100"
+                          required
+                        />
+                        <span style={{ fontSize: '0.75rem', color: '#64748b', marginTop: '0.2rem', display: 'block' }}>
+                          Ce montant s'appliquera automatiquement comme frais de livraison dans le panier client.
+                        </span>
                       </div>
 
                       <div className="form-group" style={{ marginBottom: '1.5rem' }}>
