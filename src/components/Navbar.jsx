@@ -11,6 +11,7 @@ export default function Navbar({
   onOpenWishlist,
   onOpenOrderTracking,
   onOpenAdminMobileMenu,
+  onOpenMobileMenu,
   isAdminView, 
   isProductPage,
   onToggleAdminView,
@@ -34,13 +35,14 @@ export default function Navbar({
       <div style={{
         maxWidth: '1440px',
         margin: '0 auto',
-        padding: '0 1.25rem',
+        padding: '0 1rem',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
         gap: '0.5rem',
         flexWrap: 'nowrap',
-        boxSizing: 'border-box'
+        boxSizing: 'border-box',
+        width: '100%'
       }}>
         
         {/* Brand Logo (Left) */}
@@ -61,7 +63,7 @@ export default function Navbar({
             <Sparkles size={18} color="#ffffff" />
           </div>
           <div>
-            <div className="font-display" style={{ fontSize: '1.2rem', fontWeight: 800, letterSpacing: '-0.02em', lineHeight: 1, color: '#0f172a' }}>
+            <div className="font-display" style={{ fontSize: '1.15rem', fontWeight: 800, letterSpacing: '-0.02em', lineHeight: 1, color: '#0f172a', whiteSpace: 'nowrap' }}>
               Xor<span style={{ color: '#2563eb' }}> Boutique</span>
             </div>
             <div className="font-mono hide-mobile" style={{ fontSize: '0.6rem', color: '#64748b', letterSpacing: '0.1em' }}>
@@ -75,7 +77,7 @@ export default function Navbar({
           <div style={{
             flex: '1',
             maxWidth: '520px',
-            minWidth: '180px',
+            minWidth: '140px',
             position: 'relative'
           }}>
             <Search 
@@ -86,7 +88,7 @@ export default function Navbar({
             <input
               type="text"
               className="form-input"
-              placeholder="Rechercher des vêtements, gadgets, accessoires..."
+              placeholder="Rechercher un produit..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               style={{
@@ -95,7 +97,7 @@ export default function Navbar({
                 paddingRight: '1rem',
                 paddingTop: '0.55rem',
                 paddingBottom: '0.55rem',
-                fontSize: '0.88rem',
+                fontSize: '0.85rem',
                 borderRadius: 'var(--radius-full)',
                 background: '#f8fafc',
                 borderColor: searchQuery ? '#0f172a' : '#cbd5e1'
@@ -105,7 +107,7 @@ export default function Navbar({
         )}
 
         {/* Navigation Action Buttons (RIGHT) */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', flexShrink: 0 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', flexShrink: 0, paddingRight: '0.25rem' }}>
           
           {/* PWA Install Button */}
           {pwaInstallPrompt && (
@@ -130,7 +132,7 @@ export default function Navbar({
                 title="Voir la boutique"
               >
                 <Store size={15} color="#ffffff" />
-                <span style={{ fontWeight: 700, fontSize: '0.78rem', color: '#ffffff' }}>
+                <span className="hide-mobile" style={{ fontWeight: 700, fontSize: '0.78rem', color: '#ffffff' }}>
                   Boutique
                 </span>
               </button>
@@ -141,11 +143,11 @@ export default function Navbar({
               <button
                 className="btn btn-secondary admin-mobile-menu-trigger"
                 onClick={onOpenAdminMobileMenu}
-                style={{ padding: '0.45rem 0.6rem', background: '#0f172a', color: '#ffffff', borderColor: '#0f172a', display: 'flex', alignItems: 'center', gap: '0.3rem', whiteSpace: 'nowrap', borderRadius: '10px' }}
+                style={{ padding: '0.45rem 0.65rem', background: '#0f172a', color: '#ffffff', borderColor: '#0f172a', display: 'flex', alignItems: 'center', gap: '0.35rem', whiteSpace: 'nowrap', borderRadius: '10px' }}
                 title="Ouvrir le menu de navigation Admin"
               >
                 <Menu size={18} color="#ffffff" />
-                <span style={{ fontSize: '0.78rem', fontWeight: 700 }}>Menu</span>
+                <span className="hide-mobile" style={{ fontSize: '0.78rem', fontWeight: 700 }}>Menu</span>
               </button>
             </>
           )}
@@ -225,6 +227,8 @@ export default function Navbar({
               )}
             </button>
           )}
+
+
 
         </div>
       </div>

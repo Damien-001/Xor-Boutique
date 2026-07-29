@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Star, ShoppingBag, Eye, Heart, AlertTriangle, Share2, Check } from 'lucide-react';
+import { Star, ShoppingBag, Eye, Heart, AlertTriangle, Share2, Check, MessageCircle } from 'lucide-react';
 import { formatCurrency } from '../services/store';
 
 export default function ProductCard({ 
@@ -286,23 +286,60 @@ export default function ProductCard({
             )}
           </div>
 
-          <button 
-            className="btn btn-primary" 
-            disabled={isOutOfStock}
-            style={{ 
-              width: '100%', 
-              justifyContent: 'center',
-              background: isOutOfStock ? '#94a3b8' : '#0f172a',
-              cursor: isOutOfStock ? 'not-allowed' : 'pointer'
-            }}
-            onClick={(e) => {
-              e.stopPropagation();
-              if (!isOutOfStock) onAddToCart(product);
-            }}
-          >
-            <ShoppingBag size={16} /> 
-            {isOutOfStock ? 'Rupture de Stock' : 'Ajouter au Panier'}
-          </button>
+          <div style={{ display: 'grid', gridTemplateColumns: isOutOfStock ? '1fr' : '1fr 1fr', gap: '0.45rem', width: '100%' }}>
+            <button 
+              className="btn btn-primary" 
+              disabled={isOutOfStock}
+              style={{ 
+                width: '100%', 
+                justifyContent: 'center',
+                gap: '0.35rem',
+                background: isOutOfStock ? '#94a3b8' : '#0f172a',
+                cursor: isOutOfStock ? 'not-allowed' : 'pointer',
+                padding: '0.65rem 0.4rem',
+                fontSize: '0.78rem',
+                borderRadius: '10px',
+                boxSizing: 'border-box',
+                fontWeight: 700
+              }}
+              onClick={(e) => {
+                e.stopPropagation();
+                if (!isOutOfStock) onAddToCart(product);
+              }}
+              title="Ajouter au Panier"
+            >
+              <ShoppingBag size={15} /> 
+              <span>{isOutOfStock ? 'Rupture' : 'Panier'}</span>
+            </button>
+
+            {!isOutOfStock && (
+              <a
+                href={`https://wa.me/2250700000000?text=${encodeURIComponent(`Bonjour Xor Boutique ! Je souhaite commander directement l'article : ${product.name} (Prix : ${product.price} FCFA).`)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={(e) => e.stopPropagation()}
+                className="btn"
+                style={{
+                  width: '100%',
+                  justifyContent: 'center',
+                  gap: '0.35rem',
+                  padding: '0.65rem 0.4rem',
+                  fontSize: '0.78rem',
+                  background: '#25D366',
+                  color: '#ffffff',
+                  fontWeight: 700,
+                  borderRadius: '10px',
+                  border: 'none',
+                  boxSizing: 'border-box',
+                  textDecoration: 'none'
+                }}
+                title="Commander directement par WhatsApp"
+              >
+                <MessageCircle size={15} fill="#ffffff" color="#25D366" />
+                <span>WhatsApp</span>
+              </a>
+            )}
+          </div>
         </div>
       </div>
     </div>

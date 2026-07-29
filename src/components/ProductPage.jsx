@@ -336,6 +336,26 @@ export default function ProductPage({
               )}
             </div>
 
+            {/* Dynamic Stock Scarcity & Realtime Urgency Banner */}
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.6rem',
+              background: '#fff7ed',
+              border: '1px solid #ffedd5',
+              padding: '0.65rem 1rem',
+              borderRadius: '10px',
+              marginBottom: '1.5rem',
+              fontSize: '0.82rem',
+              color: '#c2410c',
+              fontWeight: 700
+            }}>
+              <Zap size={16} color="#ea580c" style={{ flexShrink: 0 }} />
+              <span>
+                ⚡ 14 personnes ont cet article dans leur panier. {product.stock > 0 && product.stock <= 5 ? `Plus que ${product.stock} disponibles en stock !` : 'Expédition prioritaire 24h.'}
+              </span>
+            </div>
+
             {/* Description */}
             <p style={{
               fontSize: '1rem',
@@ -405,7 +425,7 @@ export default function ProductPage({
             )}
 
             {/* Quantity Stepper */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem', marginBottom: '2rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem', marginBottom: '1.5rem' }}>
               <span className="form-label" style={{ margin: 0, fontWeight: 700, color: '#0f172a' }}>Quantité :</span>
               <div style={{ display: 'flex', alignItems: 'center', border: '1px solid #cbd5e1', borderRadius: '10px', background: '#f8fafc' }}>
                 <button 
@@ -421,6 +441,88 @@ export default function ProductPage({
                 >
                   +
                 </button>
+              </div>
+            </div>
+
+            {/* Interactive Quantity Discount Bundle Offer Cards */}
+            <div style={{
+              background: 'linear-gradient(135deg, #f8fafc 0%, #eff6ff 100%)',
+              border: '1px solid #bfdbfe',
+              borderRadius: '16px',
+              padding: '1.25rem',
+              marginBottom: '1.75rem'
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.85rem' }}>
+                <Sparkles size={18} color="#2563eb" />
+                <span style={{ fontWeight: 800, fontSize: '0.95rem', color: '#0f172a' }}>
+                  Offres Spéciales & Remises par Quantité
+                </span>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '0.75rem' }}>
+                {/* Pack 1 Item */}
+                <div 
+                  onClick={() => setQuantity(1)}
+                  style={{
+                    padding: '0.75rem 0.85rem',
+                    borderRadius: '12px',
+                    border: quantity === 1 ? '2px solid #0f172a' : '1px solid #cbd5e1',
+                    background: quantity === 1 ? '#ffffff' : '#f8fafc',
+                    cursor: 'pointer',
+                    textAlign: 'center',
+                    boxShadow: quantity === 1 ? '0 4px 12px rgba(15,23,42,0.1)' : 'none'
+                  }}
+                >
+                  <div style={{ fontSize: '0.78rem', color: '#64748b', fontWeight: 600 }}>1 Article</div>
+                  <div style={{ fontWeight: 800, fontSize: '0.95rem', color: '#0f172a', marginTop: '0.15rem' }}>
+                    Standard
+                  </div>
+                  <div style={{ fontSize: '0.72rem', color: '#94a3b8', marginTop: '0.1rem' }}>Prix normal</div>
+                </div>
+
+                {/* Pack 2 Items (-5%) */}
+                <div 
+                  onClick={() => setQuantity(2)}
+                  style={{
+                    padding: '0.75rem 0.85rem',
+                    borderRadius: '12px',
+                    border: quantity === 2 ? '2px solid #2563eb' : '1px solid #93c5fd',
+                    background: quantity === 2 ? '#ffffff' : '#eff6ff',
+                    cursor: 'pointer',
+                    textAlign: 'center',
+                    boxShadow: quantity === 2 ? '0 4px 12px rgba(37,99,235,0.15)' : 'none'
+                  }}
+                >
+                  <div style={{ fontSize: '0.78rem', color: '#2563eb', fontWeight: 700 }}>2 Articles</div>
+                  <div style={{ fontWeight: 800, fontSize: '0.95rem', color: '#1d4ed8', marginTop: '0.15rem' }}>
+                    -5% de Remise
+                  </div>
+                  <div style={{ fontSize: '0.72rem', color: '#059669', fontWeight: 700, marginTop: '0.1rem' }}>
+                    Économisez -5%
+                  </div>
+                </div>
+
+                {/* Pack 3 Items (-10% + Free Delivery) */}
+                <div 
+                  onClick={() => setQuantity(3)}
+                  style={{
+                    padding: '0.75rem 0.85rem',
+                    borderRadius: '12px',
+                    border: quantity >= 3 ? '2px solid #d97706' : '1px solid #fde68a',
+                    background: quantity >= 3 ? '#ffffff' : '#fef3c7',
+                    cursor: 'pointer',
+                    textAlign: 'center',
+                    boxShadow: quantity >= 3 ? '0 4px 12px rgba(217,119,6,0.15)' : 'none'
+                  }}
+                >
+                  <div style={{ fontSize: '0.78rem', color: '#b45309', fontWeight: 700 }}>3 Articles +</div>
+                  <div style={{ fontWeight: 800, fontSize: '0.95rem', color: '#d97706', marginTop: '0.15rem' }}>
+                    -10% de Remise
+                  </div>
+                  <div style={{ fontSize: '0.72rem', color: '#b45309', fontWeight: 700, marginTop: '0.1rem' }}>
+                    Livraison Offerte 🚚
+                  </div>
+                </div>
               </div>
             </div>
           </div>

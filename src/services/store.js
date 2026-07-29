@@ -32,7 +32,12 @@ const INITIAL_SETTINGS = {
   currency: 'FCFA',
   deliveryFee: 2500,
   address: 'Abidjan, Côte d\'Ivoire',
-  notificationsEnabled: true
+  notificationsEnabled: true,
+  enableQuantityDiscounts: true,
+  discount2Items: 5,
+  discount3Items: 10,
+  discount4Items: 15,
+  freeShippingMinAmount: 50000
 };
 
 const INITIAL_CATEGORIES = [];

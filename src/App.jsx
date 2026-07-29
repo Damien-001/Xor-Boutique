@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import Navbar from './components/Navbar';
+import TopAnnouncementBar from './components/TopAnnouncementBar';
 import HeroBanner from './components/HeroBanner';
 import CategoryFilter from './components/CategoryFilter';
 import ProductGrid from './components/ProductGrid';
@@ -11,6 +12,7 @@ import InvoiceModal from './components/InvoiceModal';
 import OrderTrackingModal from './components/OrderTrackingModal';
 import AdminDashboard from './components/AdminDashboard';
 import AdminLoginPage from './components/AdminLoginPage';
+import RecentlyViewedBar from './components/RecentlyViewedBar';
 
 import { 
   getCategories, 
@@ -77,6 +79,21 @@ export default function App() {
   const [cart, setCart] = useState(getCart());
   const [wishlist, setWishlist] = useState(getWishlist());
   const [settings, setSettings] = useState(getSettings());
+  const [recentlyViewedIds, setRecentlyViewedIds] = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem('damshop_recently_viewed') || '[]');
+    } catch (e) { return []; }
+  });
+  const [showRecentlyViewed, setShowRecentlyViewed] = useState(true);
+
+  const trackRecentlyViewed = (productId) => {
+    if (!productId) return;
+    setRecentlyViewedIds(prev => {
+      const updated = [productId, ...prev.filter(id => id !== productId)].slice(0, 4);
+      try { localStorage.setItem('damshop_recently_viewed', JSON.stringify(updated)); } catch(e){}
+      return updated;
+    });
+  };
 
   // Listen to store updates
   useEffect(() => {
@@ -249,6 +266,7 @@ export default function App() {
 
   // Handle quick view modal open (when browsing inside store)
   const handleOpenQuickViewModal = (product) => {
+    if (product?.id) trackRecentlyViewed(product.id);
     setSelectedProductModal(product);
   };
 
@@ -329,6 +347,9 @@ export default function App() {
         </div>
       )}
 
+      {/* Top Ticker Announcement Bar */}
+      {!isAdminView && <TopAnnouncementBar settings={settings} />}
+
       {/* Main Sticky Header (Restored on Admin Page) */}
       {(!isAdminView || isAdminAuthenticated) && (
         <Navbar
@@ -340,6 +361,7 @@ export default function App() {
           onOpenWishlist={() => setIsWishlistOpen(true)}
           onOpenOrderTracking={() => setIsOrderTrackingOpen(true)}
           onOpenAdminMobileMenu={() => setIsAdminMobileMenuOpen(true)}
+          onOpenMobileMenu={() => setIsMobileMenuOpen(true)}
           isAdminView={isAdminView}
           isProductPage={Boolean(directProductPage)}
           onToggleAdminView={() => handleToggleAdminView()}
@@ -481,6 +503,21 @@ export default function App() {
           order={selectedInvoiceOrder}
           settings={settings}
           onClose={() => setSelectedInvoiceOrder(null)}
+        />
+      )}
+
+      {/* Recently Viewed Products Floating Dock */}
+      {!isAdminView && showRecentlyViewed && recentlyViewedIds.length > 0 && (
+        <RecentlyViewedBar
+          products={recentlyViewedIds.map(id => products.find(p => p.id === id)).filter(Boolean)}
+          onSelectProduct={(p) => {
+            if (directProductPage) {
+              setDirectProductPage(p);
+            } else {
+              handleOpenQuickViewModal(p);
+            }
+          }}
+          onClose={() => setShowRecentlyViewed(false)}
         />
       )}
 

@@ -38,13 +38,15 @@ export default function ProductGrid({
   }
 
   return (
-    <div style={{
-      maxWidth: '1440px',
-      margin: '0 auto 3rem auto',
-      display: 'grid',
-      gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
-      gap: '1.5rem'
-    }}>
+    <div 
+      className="product-grid-3cols"
+      style={{
+        maxWidth: '1440px',
+        margin: '0 auto 3rem auto',
+        boxSizing: 'border-box',
+        width: '100%'
+      }}
+    >
       {products.map(product => (
         <ProductCard
           key={product.id}

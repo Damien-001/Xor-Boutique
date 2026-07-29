@@ -370,3 +370,31 @@ body.drawer-open {
   height: 100vh !important;
   z-index: 350 !important;
 }
+
+/* Responsive Hide Utility for Ultra-Clean Mobile Header Margins */
+@media (max-width: 640px) {
+  .hide-mobile {
+    display: none !important;
+  }
+}
+
+/* 3 Columns Grid for Product Storefront (3 Articles par Ligne) */
+.product-grid-3cols {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.5rem;
+}
+
+@media (max-width: 960px) {
+  .product-grid-3cols {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.25rem;
+  }
+}
+
+@media (max-width: 580px) {
+  .product-grid-3cols {
+    grid-template-columns: repeat(1, 1fr);
+    gap: 1rem;
+  }
+}

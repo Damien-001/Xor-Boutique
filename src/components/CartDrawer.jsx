@@ -86,9 +86,10 @@ export default function CartDrawer({ isOpen, onClose, cartItems, onUpdateQuantit
           display: 'flex',
           flexDirection: 'column',
           justifyContent: 'space-between',
-          padding: '1.5rem',
+          padding: '1.5rem 1.25rem calc(1.5rem + env(safe-area-inset-bottom, 0px)) 1.25rem',
           background: '#ffffff',
-          color: '#0f172a'
+          color: '#0f172a',
+          boxSizing: 'border-box'
         }}
         onClick={(e) => e.stopPropagation()}
       >

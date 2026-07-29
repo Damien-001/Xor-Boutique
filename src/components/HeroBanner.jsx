@@ -1,22 +1,23 @@
 import React from 'react';
-import { ArrowRight, Zap, Shield, Truck } from 'lucide-react';
+import { ArrowRight, Zap, Shield, Truck, MessageCircle } from 'lucide-react';
 
 export default function HeroBanner({ onExploreClick }) {
   return (
     <div className="glass-panel animate-fade-in" style={{
       maxWidth: '1440px',
       margin: '0 auto 2.5rem auto',
-      padding: '3.5rem 2.5rem',
+      padding: '2rem 1.25rem',
       position: 'relative',
       overflow: 'hidden',
       background: 'linear-gradient(135deg, #f8fafc 0%, #ffffff 100%)',
       borderColor: '#e2e8f0',
-      boxShadow: '0 10px 30px rgba(0, 0, 0, 0.04)'
+      boxShadow: '0 10px 30px rgba(0, 0, 0, 0.04)',
+      boxSizing: 'border-box'
     }}>
       <div style={{
         display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
-        gap: '2.5rem',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
+        gap: '2rem',
         alignItems: 'center'
       }}>
         {/* Hero Left Content */}
@@ -72,9 +73,9 @@ export default function HeroBanner({ onExploreClick }) {
           </div>
 
           <div className="glass-card" style={{ padding: '1.5rem', textAlign: 'center', background: '#ffffff' }}>
-            <Zap size={30} color="#10b981" style={{ marginBottom: '0.6rem' }} />
-            <div style={{ fontWeight: 700, fontSize: '0.95rem', color: '#0f172a' }}>App PWA Client</div>
-            <div style={{ fontSize: '0.8rem', color: '#64748b' }}>Installable sur mobile</div>
+            <MessageCircle size={30} color="#10b981" style={{ marginBottom: '0.6rem' }} />
+            <div style={{ fontWeight: 700, fontSize: '0.95rem', color: '#0f172a' }}>Support WhatsApp</div>
+            <div style={{ fontSize: '0.8rem', color: '#64748b' }}>Assistance 24/7</div>
           </div>
         </div>
       </div>

@@ -104,7 +104,7 @@ export default function InvoiceModal({ order, settings, onClose }) {
         </div>
 
         {/* Customer Details */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', marginBottom: '2rem', background: '#f8fafc', padding: '1.25rem', borderRadius: 'var(--radius-sm)', border: '1px solid #e2e8f0' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.25rem', marginBottom: '2rem', background: '#f8fafc', padding: '1.25rem', borderRadius: 'var(--radius-sm)', border: '1px solid #e2e8f0', boxSizing: 'border-box' }}>
           <div>
             <div className="form-label" style={{ marginBottom: '0.4rem' }}>Facturé à :</div>
             <div style={{ fontWeight: 700, fontSize: '1rem', marginBottom: '0.2rem' }}>{order.customerName}</div>
@@ -121,8 +121,9 @@ export default function InvoiceModal({ order, settings, onClose }) {
           </div>
         </div>
 
-        {/* Order Items Table */}
-        <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '2rem', fontSize: '0.9rem' }}>
+        {/* Order Items Table Wrapper for Mobile */}
+        <div style={{ width: '100%', overflowX: 'auto', WebkitOverflowScrolling: 'touch', marginBottom: '2rem' }}>
+          <table style={{ width: '100%', minWidth: '460px', borderCollapse: 'collapse', fontSize: '0.9rem' }}>
           <thead>
             <tr style={{ borderBottom: '2px solid #e2e8f0', textAlign: 'left' }}>
               <th style={{ padding: '0.75rem 0' }}>Article</th>
@@ -146,6 +147,7 @@ export default function InvoiceModal({ order, settings, onClose }) {
             ))}
           </tbody>
         </table>
+        </div>
 
         {/* Total Calculations */}
         <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '2rem' }}>

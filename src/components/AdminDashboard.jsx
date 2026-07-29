@@ -817,7 +817,7 @@ CREATE POLICY "Admin All avis" ON public.reviews FOR ALL USING (true);`;
               </div>
 
               {/* Middle Grid: Weekly Sales Chart & Stock Alerts */}
-              <div style={{ width: '100%', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '2rem', boxSizing: 'border-box' }}>
+              <div style={{ width: '100%', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '1.5rem', boxSizing: 'border-box' }}>
                 
                 {/* Visual Sales Chart */}
                 <div className="glass-panel" style={{ padding: '1.75rem', background: '#ffffff', borderRadius: '16px', boxSizing: 'border-box' }}>
@@ -1730,6 +1730,60 @@ CREATE POLICY "Admin All avis" ON public.reviews FOR ALL USING (true);`;
                         💾 Enregistrer les Réglages
                       </button>
                     </form>
+                  </div>
+
+                  {/* Marketing Quantity Discounts Settings Card */}
+                  <div className="glass-card" style={{ padding: '1.5rem', background: '#ffffff', borderRadius: '16px' }}>
+                    <div style={{ fontWeight: 800, color: '#0f172a', marginBottom: '0.4rem', display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '1rem' }}>
+                      <Tag size={18} color="#2563eb" /> Offres Marketing & Remises par Quantité
+                    </div>
+                    <p style={{ fontSize: '0.82rem', color: '#64748b', marginBottom: '1.25rem', lineHeight: 1.5 }}>
+                      Configurez les réductions automatiques offertes aux clients lorsqu'ils achètent plusieurs articles sur votre boutique.
+                    </p>
+
+                    <div className="form-group" style={{ marginBottom: '1rem' }}>
+                      <label className="form-label">Réduction pour 2 articles (%)</label>
+                      <input 
+                        type="number" 
+                        className="form-input" 
+                        value={settings.discount2Items !== undefined ? settings.discount2Items : 5}
+                        onChange={(e) => setSettingsState({ ...settings, discount2Items: Number(e.target.value) })}
+                        min="0"
+                        max="100"
+                      />
+                    </div>
+
+                    <div className="form-group" style={{ marginBottom: '1rem' }}>
+                      <label className="form-label">Réduction pour 3 articles (%)</label>
+                      <input 
+                        type="number" 
+                        className="form-input" 
+                        value={settings.discount3Items !== undefined ? settings.discount3Items : 10}
+                        onChange={(e) => setSettingsState({ ...settings, discount3Items: Number(e.target.value) })}
+                        min="0"
+                        max="100"
+                      />
+                    </div>
+
+                    <div className="form-group" style={{ marginBottom: '1rem' }}>
+                      <label className="form-label">Seuil de Livraison Gratuite (FCFA)</label>
+                      <input 
+                        type="number" 
+                        className="form-input" 
+                        value={settings.freeShippingMinAmount !== undefined ? settings.freeShippingMinAmount : 50000}
+                        onChange={(e) => setSettingsState({ ...settings, freeShippingMinAmount: Number(e.target.value) })}
+                        step="1000"
+                      />
+                    </div>
+
+                    <button 
+                      type="button" 
+                      className="btn btn-primary" 
+                      style={{ width: '100%', justifyContent: 'center', padding: '0.75rem' }}
+                      onClick={handleSaveSettings}
+                    >
+                      🏷️ Sauvegarder les Offres Marketing
+                    </button>
                   </div>
 
                   {/* Cache & LocalStorage Storage Maintenance Card */}
