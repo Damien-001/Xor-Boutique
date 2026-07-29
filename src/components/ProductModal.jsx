@@ -18,7 +18,7 @@ export default function ProductModal({ product, categories, onClose, onAddToCart
   const [copiedLink, setCopiedLink] = useState(false);
 
   const handleShareProduct = async () => {
-    const shareUrl = `${window.location.origin}${window.location.pathname}?product=${product.id}`;
+    const shareUrl = `${window.location.origin}/?product=${product.id}`;
     
     if (navigator.share) {
       try {

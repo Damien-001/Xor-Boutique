@@ -11,7 +11,8 @@ import {
   Send,
   Heart,
   AlertTriangle,
-  ChevronRight
+  ChevronRight,
+  Zap
 } from 'lucide-react';
 import { formatCurrency, getReviews, addReview } from '../services/store';
 import ProductCard from './ProductCard';
@@ -55,7 +56,7 @@ export default function ProductPage({
   const similarProducts = allProducts.filter(p => p.category === product.category && p.id !== product.id).slice(0, 4);
 
   const handleShareProduct = async () => {
-    const shareUrl = `${window.location.origin}${window.location.pathname}?product=${product.id}`;
+    const shareUrl = `${window.location.origin}/?product=${product.id}`;
     
     if (navigator.share) {
       try {
