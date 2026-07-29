@@ -209,17 +209,20 @@ export async function fetchSupabaseOrders() {
     
     return data.map(o => ({
       id: o.id,
-      customerName: o.customer_name,
-      customerPhone: o.customer_phone,
-      customerWhatsapp: o.customer_whatsapp,
-      customerCity: o.customer_city,
-      deliveryAddress: o.delivery_address,
+      customerName: o.customer_name || 'Client DamShop',
+      customerPhone: o.customer_phone || '',
+      phone: o.customer_phone || '',
+      customerWhatsapp: o.customer_whatsapp || o.customer_phone || '',
+      customerCity: o.customer_city || 'Lomé',
+      deliveryAddress: o.delivery_address || '',
+      address: o.delivery_address || '',
       items: o.items || [],
-      total: Number(o.total),
-      status: o.status,
-      paymentMethod: o.payment_method,
-      notes: o.notes,
-      createdAt: o.created_at
+      total: Number(o.total) || 0,
+      status: o.status || 'En attente',
+      paymentMethod: o.payment_method || 'cash',
+      notes: o.notes || '',
+      createdAt: o.created_at,
+      date: o.created_at ? o.created_at.split('T')[0] : new Date().toISOString().split('T')[0]
     }));
   } catch (err) {
     console.warn('Supabase fetch orders warning:', err.message);
@@ -234,21 +237,21 @@ export async function insertSupabaseOrder(order) {
   try {
     const payload = {
       id: order.id,
-      customer_name: order.customerName,
-      customer_phone: order.customerPhone,
-      customer_whatsapp: order.customerWhatsapp || order.customerPhone,
-      customer_city: order.customerCity || 'Lomé',
-      delivery_address: order.deliveryAddress,
-      items: order.items,
-      total: order.total,
-      status: order.status || 'pending',
+      customer_name: order.customerName || order.name || 'Client DamShop',
+      customer_phone: order.customerPhone || order.phone || '',
+      customer_whatsapp: order.customerWhatsapp || order.phone || order.customerPhone || '',
+      customer_city: order.customerCity || order.city || 'Lomé',
+      delivery_address: order.deliveryAddress || order.address || '',
+      items: order.items || [],
+      total: Number(order.total) || 0,
+      status: order.status || 'En attente',
       payment_method: order.paymentMethod || 'cash',
       notes: order.notes || ''
     };
 
     const { data, error } = await supabase
       .from('orders')
-      .insert(payload)
+      .upsert(payload)
       .select();
 
     if (error) throw error;

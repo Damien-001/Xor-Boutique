@@ -489,27 +489,45 @@ export const clearNotifications = () => {
 
 export const placeOrder = (orderData) => {
   const orders = getOrders();
+  const cleanPhone = orderData.phone || orderData.customerPhone || '';
+  const cleanAddress = orderData.address || orderData.deliveryAddress || '';
+  const cleanName = orderData.customerName || orderData.name || 'Client DamShop';
+
   const newOrder = {
     ...orderData,
     id: 'DS-' + Math.floor(1000 + Math.random() * 9000),
+    customerName: cleanName,
+    phone: cleanPhone,
+    customerPhone: cleanPhone,
+    address: cleanAddress,
+    deliveryAddress: cleanAddress,
     date: new Date().toISOString().split('T')[0],
+    createdAt: new Date().toISOString(),
     status: 'En attente'
   };
+
   const updatedOrders = [newOrder, ...orders];
-  localStorage.setItem('damshop_orders', JSON.stringify(updatedOrders));
+  safeSetLocalStorage('damshop_orders', updatedOrders);
   setItem('orders', updatedOrders);
+
+  // Sync to Supabase Cloud Database immediately if configured
+  if (isSupabaseConfigured()) {
+    insertSupabaseOrder(newOrder).catch(err => {
+      console.warn('Background Supabase order save error:', err);
+    });
+  }
 
   // Automatically deduct stock for ordered items
   const products = getProducts();
   const updatedProducts = products.map(product => {
-    const orderedItem = orderData.items.find(item => item.name === product.name);
+    const orderedItem = (orderData.items || []).find(item => item.name === product.name);
     if (orderedItem) {
       const remainingStock = Math.max(0, (product.stock || 0) - orderedItem.quantity);
       return { ...product, stock: remainingStock };
     }
     return product;
   });
-  localStorage.setItem('damshop_products', JSON.stringify(updatedProducts));
+  safeSetLocalStorage('damshop_products', updatedProducts);
   setItem('products', updatedProducts);
 
   clearCart();
@@ -883,10 +901,32 @@ export const pullDataFromSupabase = async () => {
       setItem('products', products);
     }
 
-    const orders = await fetchSupabaseOrders();
-    if (Array.isArray(orders)) {
-      safeSetLocalStorage('damshop_orders', orders);
-      setItem('orders', orders);
+    // NON-DESTRUCTIVE ORDER SYNC & MERGE
+    const cloudOrders = await fetchSupabaseOrders();
+    if (Array.isArray(cloudOrders)) {
+      const localOrders = getOrders();
+      const mergedMap = new Map();
+
+      // Add cloud orders first
+      cloudOrders.forEach(o => mergedMap.set(o.id, o));
+
+      // Merge local orders that haven't reached Supabase yet, and push them to cloud
+      localOrders.forEach(localOrd => {
+        if (!mergedMap.has(localOrd.id)) {
+          mergedMap.set(localOrd.id, localOrd);
+          // Push unsynced local order to Supabase
+          insertSupabaseOrder(localOrd).catch(err => console.warn('Sync pending local order error:', err));
+        }
+      });
+
+      const finalOrders = Array.from(mergedMap.values()).sort((a, b) => {
+        const timeA = new Date(a.createdAt || a.date || 0).getTime();
+        const timeB = new Date(b.createdAt || b.date || 0).getTime();
+        return timeB - timeA;
+      });
+
+      safeSetLocalStorage('damshop_orders', finalOrders);
+      setItem('orders', finalOrders);
     }
 
     const adminAccs = await fetchSupabaseAdminAccounts();

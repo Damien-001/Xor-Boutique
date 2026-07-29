@@ -30,7 +30,7 @@ import {
   formatCurrency,
   pullDataFromSupabase
 } from './services/store';
-import { isSupabaseConfigured } from './services/supabaseClient';
+import { isSupabaseConfigured, subscribeToSupabaseRealtimeOrders } from './services/supabaseClient';
 
 import { Bell, ShoppingBag, X } from 'lucide-react';
 
@@ -108,9 +108,18 @@ export default function App() {
       setSettings(getSettings());
     });
 
-    // Auto-sync with Supabase Cloud on application load if configured
+    // Auto-sync & Realtime listener with Supabase Cloud on application load if configured
     if (isSupabaseConfigured()) {
       pullDataFromSupabase().catch(err => console.warn('Auto Supabase initial sync error:', err));
+      
+      const unsubscribeRealtime = subscribeToSupabaseRealtimeOrders(() => {
+        pullDataFromSupabase().catch(err => console.warn('Realtime Supabase order pull error:', err));
+      });
+
+      return () => {
+        unsubscribe();
+        if (unsubscribeRealtime) unsubscribeRealtime();
+      };
     }
 
     return () => unsubscribe();
