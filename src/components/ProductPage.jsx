@@ -12,7 +12,8 @@ import {
   Heart,
   AlertTriangle,
   ChevronRight,
-  Zap
+  Zap,
+  Sparkles
 } from 'lucide-react';
 import { formatCurrency, getReviews, addReview } from '../services/store';
 import ProductCard from './ProductCard';
