@@ -11,6 +11,9 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
+      devOptions: {
+        enabled: true
+      },
       includeAssets: ['favicon.svg', 'masked-icon.svg'],
       manifest: {
         name: 'Xor Boutique - Boutique en Ligne PWA',
