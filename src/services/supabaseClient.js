@@ -401,3 +401,72 @@ export function subscribeToSupabaseRealtimeOrders(onNewOrder) {
   };
 }
 
+// 6. Admin Accounts & Collaborators Cloud Database Helpers
+export async function fetchSupabaseAdminAccounts() {
+  const supabase = getSupabase();
+  if (!supabase) return null;
+
+  try {
+    const { data, error } = await supabase
+      .from('admin_accounts')
+      .select('*')
+      .order('created_at', { ascending: true });
+
+    if (error) throw error;
+    return data.map(acc => ({
+      id: acc.id,
+      name: acc.name,
+      username: acc.username,
+      password: acc.password,
+      role: acc.role || 'collaborator'
+    }));
+  } catch (err) {
+    console.warn('Supabase fetch admin accounts warning:', err.message);
+    return null;
+  }
+}
+
+export async function upsertSupabaseAdminAccount(account) {
+  const supabase = getSupabase();
+  if (!supabase) return null;
+
+  try {
+    const payload = {
+      id: account.id,
+      name: account.name,
+      username: account.username,
+      password: account.password,
+      role: account.role || 'collaborator'
+    };
+
+    const { data, error } = await supabase
+      .from('admin_accounts')
+      .upsert(payload)
+      .select();
+
+    if (error) throw error;
+    return data?.[0];
+  } catch (err) {
+    console.error('Supabase upsert admin account error:', err);
+    return null;
+  }
+}
+
+export async function deleteSupabaseAdminAccount(id) {
+  const supabase = getSupabase();
+  if (!supabase) return false;
+
+  try {
+    const { error } = await supabase
+      .from('admin_accounts')
+      .delete()
+      .eq('id', id);
+
+    if (error) throw error;
+    return true;
+  } catch (err) {
+    console.error('Supabase delete admin account error:', err);
+    return false;
+  }
+}
+

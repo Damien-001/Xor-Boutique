@@ -64,6 +64,16 @@ CREATE TABLE IF NOT EXISTS public.notifications (
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
+-- 7. Table des Comptes Administrateurs & Collaborateurs
+CREATE TABLE IF NOT EXISTS public.admin_accounts (
+    id TEXT PRIMARY KEY,
+    name TEXT NOT NULL,
+    username TEXT UNIQUE NOT NULL,
+    password TEXT NOT NULL,
+    role TEXT DEFAULT 'collaborator',
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
 -- ========================================================
 -- Politiques d'Accès Sécurisées (Row Level Security - RLS)
 -- Permet la lecture publique et l'insertion de commandes/avis
@@ -75,6 +85,7 @@ ALTER TABLE public.orders ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.reviews ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.settings ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.notifications ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.admin_accounts ENABLE ROW LEVEL SECURITY;
 
 -- Accès Public en Lecture (Catalogues, Produits, Catégories, Avis)
 CREATE POLICY "Lecture publique des catégories" ON public.categories FOR SELECT USING (true);
@@ -92,7 +103,9 @@ CREATE POLICY "Gestion admin produits" ON public.products FOR ALL USING (true);
 CREATE POLICY "Gestion admin avis" ON public.reviews FOR ALL USING (true);
 CREATE POLICY "Gestion admin réglages" ON public.settings FOR ALL USING (true);
 CREATE POLICY "Gestion admin commandes" ON public.orders FOR ALL USING (true);
+CREATE POLICY "Gestion admin comptes" ON public.admin_accounts FOR ALL USING (true);
 
 -- Activer les notifications en temps réel pour les nouvelles commandes
 ALTER PUBLICATION supabase_realtime ADD TABLE public.orders;
 ALTER PUBLICATION supabase_realtime ADD TABLE public.products;
+ALTER PUBLICATION supabase_realtime ADD TABLE public.admin_accounts;

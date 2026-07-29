@@ -7,6 +7,7 @@ import {
   fetchSupabaseProducts, 
   fetchSupabaseOrders, 
   fetchSupabaseReviews,
+  fetchSupabaseAdminAccounts,
   upsertSupabaseCategory,
   deleteSupabaseCategory,
   upsertSupabaseProduct,
@@ -15,6 +16,8 @@ import {
   updateSupabaseOrderStatus,
   deleteSupabaseOrder,
   insertSupabaseReview,
+  upsertSupabaseAdminAccount,
+  deleteSupabaseAdminAccount,
   subscribeToSupabaseRealtimeOrders,
   clearAllSupabaseData
 } from './supabaseClient';
@@ -834,6 +837,7 @@ export const pushAllDataToSupabase = async () => {
   const products = getProducts();
   const orders = getOrders();
   const reviews = getReviews();
+  const adminAccounts = getAdminAccounts();
 
   // Push Categories
   for (const cat of categories) {
@@ -853,6 +857,11 @@ export const pushAllDataToSupabase = async () => {
   // Push Reviews
   for (const rev of reviews) {
     await insertSupabaseReview(rev);
+  }
+
+  // Push Admin Accounts
+  for (const acc of adminAccounts) {
+    await upsertSupabaseAdminAccount(acc);
   }
 
   return true;
@@ -878,6 +887,21 @@ export const pullDataFromSupabase = async () => {
     if (Array.isArray(orders)) {
       safeSetLocalStorage('damshop_orders', orders);
       setItem('orders', orders);
+    }
+
+    const adminAccs = await fetchSupabaseAdminAccounts();
+    if (Array.isArray(adminAccs)) {
+      if (adminAccs.length > 0) {
+        safeSetLocalStorage('damshop_admin_accounts', adminAccs);
+        const settings = getSettings();
+        saveSettings({ ...settings, adminAccounts: adminAccs });
+      } else {
+        // If Supabase table is empty on first setup, seed it with current local admin accounts
+        const localAccs = getAdminAccounts();
+        for (const acc of localAccs) {
+          await upsertSupabaseAdminAccount(acc);
+        }
+      }
     }
 
     notifyStoreChange();
@@ -998,29 +1022,38 @@ export const saveAdminAccount = (accountData) => {
   const cleanPassword = (accountData.password || '').trim();
   const cleanName = (accountData.name || '').trim();
 
+  let targetId = accountData.id;
+  if (!targetId) {
+    targetId = 'acc_' + Date.now();
+  }
+
   const formattedData = {
     ...accountData,
+    id: targetId,
     name: cleanName,
     username: cleanUsername,
-    password: cleanPassword
+    password: cleanPassword,
+    role: accountData.role || 'collaborator'
   };
 
   let updated;
   if (accountData.id) {
     updated = accounts.map(a => a.id === accountData.id ? { ...a, ...formattedData } : a);
   } else {
-    const newAcc = {
-      ...formattedData,
-      id: 'acc_' + Date.now(),
-      role: accountData.role || 'collaborator'
-    };
-    updated = [...accounts, newAcc];
+    updated = [...accounts, formattedData];
   }
   safeSetLocalStorage('damshop_admin_accounts', updated);
   
   // Sync to settings for cross-device & cloud backup
   const settings = getSettings();
   saveSettings({ ...settings, adminAccounts: updated });
+
+  // Sync to Supabase Cloud Database if configured
+  if (isSupabaseConfigured()) {
+    upsertSupabaseAdminAccount(formattedData).catch(err => {
+      console.warn('Background Supabase admin account sync error:', err);
+    });
+  }
 
   notifyStoreChange();
   return updated;
@@ -1033,6 +1066,13 @@ export const deleteAdminAccount = (id) => {
   
   const settings = getSettings();
   saveSettings({ ...settings, adminAccounts: accounts });
+
+  // Delete from Supabase Cloud Database if configured
+  if (isSupabaseConfigured()) {
+    deleteSupabaseAdminAccount(id).catch(err => {
+      console.warn('Background Supabase admin account delete error:', err);
+    });
+  }
 
   notifyStoreChange();
   return accounts;
