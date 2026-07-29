@@ -1792,20 +1792,37 @@ CREATE POLICY "Admin All avis" ON public.reviews FOR ALL USING (true);`;
                       <HardDrive size={18} color="#d97706" /> Maintenance de la Mémoire & Purge du Cache
                     </div>
                     <p style={{ fontSize: '0.82rem', color: '#64748b', marginBottom: '1rem', lineHeight: 1.5 }}>
-                      Si vos photos ne s'affichent plus ou si votre navigateur indique une limite de stockage dépassée (<code>QuotaExceededError</code>), réinitialisez le cache de votre appareil.
+                      Si vos anciennes données de démonstration réapparaissent ou si vous souhaitez repartir à zéro, purgez le cache local ou vider également la base Cloud Supabase.
                     </p>
-                    <button
-                      type="button"
-                      className="btn btn-secondary"
-                      style={{ width: '100%', justifyContent: 'center', color: '#dc2626', borderColor: '#fca5a5' }}
-                      onClick={() => {
-                        if (confirm('Voulez-vous réinitialiser le stockage local et le cache du navigateur pour recharger des données fraîches ?')) {
-                          resetAllDataToDefaults();
-                        }
-                      }}
-                    >
-                      <Trash2 size={16} color="#dc2626" /> Réinitialiser le Cache & Vider la Mémoire
-                    </button>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.65rem' }}>
+                      <button
+                        type="button"
+                        className="btn btn-secondary"
+                        style={{ width: '100%', justifyContent: 'center', color: '#dc2626', borderColor: '#fca5a5' }}
+                        onClick={async () => {
+                          if (confirm('Voulez-vous réinitialiser le stockage local de cet appareil ?')) {
+                            await resetAllDataToDefaults(false);
+                          }
+                        }}
+                      >
+                        <Trash2 size={16} color="#dc2626" /> Réinitialiser le Cache Local
+                      </button>
+
+                      {isSupabaseConfigured() && (
+                        <button
+                          type="button"
+                          className="btn btn-danger"
+                          style={{ width: '100%', justifyContent: 'center', background: '#dc2626', color: '#ffffff' }}
+                          onClick={async () => {
+                            if (confirm('⚠️ ATTENTION : Cela supprimera définitivement TOUTES les anciennes données (produits, catégories, commandes) de votre base Supabase Cloud ET de cet appareil pour repartir sur une base propre. Continuer ?')) {
+                              await resetAllDataToDefaults(true);
+                            }
+                          }}
+                        >
+                          <Trash2 size={16} color="#ffffff" /> 💣 Vider Complètement la Base Supabase Cloud
+                        </button>
+                      )}
+                    </div>
                   </div>
                 </div>
 

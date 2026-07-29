@@ -27,8 +27,10 @@ import {
   subscribeToStore,
   subscribeToOrderNotifications,
   requestNotificationPermission,
-  formatCurrency
+  formatCurrency,
+  pullDataFromSupabase
 } from './services/store';
+import { isSupabaseConfigured } from './services/supabaseClient';
 
 import { Bell, ShoppingBag, X } from 'lucide-react';
 
@@ -105,6 +107,12 @@ export default function App() {
       setWishlist(getWishlist());
       setSettings(getSettings());
     });
+
+    // Auto-sync with Supabase Cloud on application load if configured
+    if (isSupabaseConfigured()) {
+      pullDataFromSupabase().catch(err => console.warn('Auto Supabase initial sync error:', err));
+    }
+
     return () => unsubscribe();
   }, []);
 

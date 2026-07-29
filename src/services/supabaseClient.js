@@ -347,6 +347,23 @@ export async function insertSupabaseReview(review) {
   }
 }
 
+// Clear All Data in Supabase Cloud Database (Purge demo/old data)
+export async function clearAllSupabaseData() {
+  const supabase = getSupabase();
+  if (!supabase) return false;
+
+  try {
+    await supabase.from('products').delete().neq('id', '___none___');
+    await supabase.from('categories').delete().neq('id', '___none___');
+    await supabase.from('orders').delete().neq('id', '___none___');
+    await supabase.from('reviews').delete().neq('id', '___none___');
+    return true;
+  } catch (err) {
+    console.error('Clear Supabase data error:', err);
+    return false;
+  }
+}
+
 // Real-Time Subscriptions for Orders
 export function subscribeToSupabaseRealtimeOrders(onNewOrder) {
   const supabase = getSupabase();
@@ -383,3 +400,4 @@ export function subscribeToSupabaseRealtimeOrders(onNewOrder) {
     supabase.removeChannel(channel);
   };
 }
+

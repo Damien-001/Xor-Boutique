@@ -15,7 +15,8 @@ import {
   updateSupabaseOrderStatus,
   deleteSupabaseOrder,
   insertSupabaseReview,
-  subscribeToSupabaseRealtimeOrders
+  subscribeToSupabaseRealtimeOrders,
+  clearAllSupabaseData
 } from './supabaseClient';
 
 const safeSetLocalStorage = (key, value) => {
@@ -862,20 +863,20 @@ export const pullDataFromSupabase = async () => {
 
   try {
     const categories = await fetchSupabaseCategories();
-    if (categories && categories.length > 0) {
-      localStorage.setItem('damshop_categories', JSON.stringify(categories));
+    if (Array.isArray(categories)) {
+      safeSetLocalStorage('damshop_categories', categories);
       setItem('categories', categories);
     }
 
     const products = await fetchSupabaseProducts();
-    if (products && products.length > 0) {
-      localStorage.setItem('damshop_products', JSON.stringify(products));
+    if (Array.isArray(products)) {
+      safeSetLocalStorage('damshop_products', products);
       setItem('products', products);
     }
 
     const orders = await fetchSupabaseOrders();
-    if (orders && orders.length > 0) {
-      localStorage.setItem('damshop_orders', JSON.stringify(orders));
+    if (Array.isArray(orders)) {
+      safeSetLocalStorage('damshop_orders', orders);
       setItem('orders', orders);
     }
 
@@ -887,7 +888,7 @@ export const pullDataFromSupabase = async () => {
   }
 };
 
-export const resetAllDataToDefaults = () => {
+export const resetAllDataToDefaults = async (clearCloud = false) => {
   try {
     const demoProdIds = ['prod_1', 'prod_2', 'prod_3', 'prod_4'];
     const demoCatIds = ['cat_1', 'cat_2', 'cat_3', 'cat_4', 'cat_5'];
@@ -919,9 +920,14 @@ export const resetAllDataToDefaults = () => {
     if (window.indexedDB) {
       window.indexedDB.deleteDatabase('DamShopDB');
     }
+
+    if (clearCloud && isSupabaseConfigured()) {
+      await clearAllSupabaseData();
+    }
   } catch (e) {
     console.warn('Purge cache error:', e);
   }
+  notifyStoreChange();
   window.location.reload();
 };
 
