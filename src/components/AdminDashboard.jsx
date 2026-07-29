@@ -1588,18 +1588,18 @@ CREATE POLICY "Admin All avis" ON public.reviews FOR ALL USING (true);`;
                                 type="button"
                                 className="btn btn-secondary"
                                 style={{ flex: 1, padding: '0.4rem 0.55rem', fontSize: '0.78rem', borderRadius: '8px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '0.3rem', whiteSpace: 'nowrap' }}
-                                onClick={() => downloadInvoiceFile(order, settings)}
-                                title="Télécharger / Imprimer la Facture PDF"
+                                onClick={() => downloadInvoiceFile(order, settings, true)}
+                                title="Télécharger / Imprimer la Facture Acquittée PDF"
                               >
-                                <Download size={14} /> PDF
+                                <Download size={14} /> Facture PDF
                               </button>
 
                               <button
                                 type="button"
                                 className="btn"
                                 style={{ padding: '0.4rem 0.65rem', background: '#25D366', color: '#ffffff', border: 'none', borderRadius: '8px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}
-                                onClick={() => shareOrSendPdfReceipt(order, settings)}
-                                title="Envoyer le Reçu par WhatsApp au client"
+                                onClick={() => shareOrSendPdfReceipt(order, settings, true)}
+                                title="Envoyer le Reçu Acquitté par WhatsApp au client"
                               >
                                 <MessageCircle size={15} />
                               </button>

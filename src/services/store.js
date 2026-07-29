@@ -607,6 +607,9 @@ export const generateWhatsAppPaidReceiptMessageText = (order, settings) => {
   const baseUrl = window.location.origin + window.location.pathname;
   const receiptUrl = `${baseUrl}?invoice=${order.id}`;
 
+  const itemsSubtotal = (order.items || []).reduce((sum, item) => sum + (Number(item.price || 0) * Number(item.quantity || 1)), 0);
+  const deliveryFee = Math.max(0, Number(order.total || 0) - itemsSubtotal);
+
   let text = `Bonjour *${order.customerName}* ! 👋\n`;
   if (isPaid) {
     text += `Votre commande *N° ${order.id}* a bien été livrée et réglée avec succès ! 🎉\n\n`;
@@ -618,15 +621,16 @@ export const generateWhatsAppPaidReceiptMessageText = (order, settings) => {
 
   text += `-----------------------------------------\n`;
   text += `👤 *Client :* ${order.customerName}\n`;
-  text += `📞 *Tél :* ${order.phone}\n`;
-  text += `💰 *Montant Total :* ${formatCurrency(order.total)}\n`;
-  text += `📍 *Adresse :* ${order.address}\n`;
+  text += `📞 *Tél :* ${order.phone || order.customerPhone || ''}\n`;
+  text += `📍 *Adresse :* ${order.address || order.deliveryAddress || ''}\n`;
   text += `💳 *Mode :* ${order.paymentMethod}\n\n`;
   text += `📦 *Détail des Articles :*\n`;
-  order.items.forEach((item) => {
+  (order.items || []).forEach((item) => {
     text += `- ${item.quantity}x ${item.name} (${formatCurrency(item.price * item.quantity)})\n`;
   });
-  text += `\n📄 *Lien Reçu PDF 1-Clic :*\n${receiptUrl}\n\n`;
+  text += `🚚 *Livraison :* ${deliveryFee > 0 ? formatCurrency(deliveryFee) : 'Gratuite (Offerte)'}\n`;
+  text += `💰 *MONTANT TOTAL : ${formatCurrency(order.total)}*\n\n`;
+  text += `📄 *Lien Reçu PDF 1-Clic :*\n${receiptUrl}\n\n`;
   text += `Merci pour votre confiance sur *DamShop* ! À très bientôt. 🛍️`;
 
   return text;
@@ -634,27 +638,26 @@ export const generateWhatsAppPaidReceiptMessageText = (order, settings) => {
 
 // WhatsApp Paid Receipt Dispatch Link Generator
 export const generateWhatsAppPaidReceiptLink = (order, settings) => {
-  const phone = order.phone || settings?.whatsappNumber || '2250700000000';
+  const phone = order.phone || order.customerPhone || settings?.whatsappNumber || '22890000000';
   const text = generateWhatsAppPaidReceiptMessageText(order, settings);
   return `https://wa.me/${phone.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(text)}`;
 };
 
 // 1-Click Share Native PDF File + Full Text (Mobile) or Download + Link (Desktop)
-export const shareOrSendPdfReceipt = async (order, settings) => {
-  const isPaid = order.status === 'Livré & Payé' || order.status === 'Payé';
+export const shareOrSendPdfReceipt = async (order, settings, forceOfficialInvoice = false) => {
+  const isPaid = forceOfficialInvoice || order.status === 'Livré & Payé' || order.status === 'Payé' || order.status === 'Livré';
   const fileNamePrefix = isPaid ? 'Facture_Acquittee' : 'Bon_De_Commande';
   const fileName = `${fileNamePrefix}_DamShop_${order.id}.pdf`;
   const fullText = generateWhatsAppPaidReceiptMessageText(order, settings);
 
   // Always generate/download PDF first for safety
-  await downloadInvoiceFile(order, settings);
+  await downloadInvoiceFile(order, settings, forceOfficialInvoice);
 
   // Try Native Mobile File Share API if supported
   if (navigator.share && navigator.canShare && window.jspdf) {
     try {
       const { jsPDF } = window.jspdf;
       const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
-      // Generate blob in memory
       const pdfBlob = doc.output('blob');
       const pdfFile = new File([pdfBlob], fileName, { type: 'application/pdf' });
 
@@ -677,9 +680,9 @@ export const shareOrSendPdfReceipt = async (order, settings) => {
 };
 
 // Direct Instant Native Vector PDF Receipt Generator (Distinguishes Unpaid vs Paid Invoice)
-export const downloadInvoiceFile = async (order, settings) => {
+export const downloadInvoiceFile = async (order, settings, forceOfficialInvoice = false) => {
   try {
-    const isPaid = order.status === 'Livré & Payé' || order.status === 'Payé';
+    const isPaid = forceOfficialInvoice || order.status === 'Livré & Payé' || order.status === 'Payé' || order.status === 'Livré' || order.status === 'Expédié';
 
     // Dynamically load jsPDF UMD script if not available
     if (!window.jspdf) {
@@ -708,14 +711,14 @@ export const downloadInvoiceFile = async (order, settings) => {
     // Color Palette
     const primaryColor = [15, 23, 42];  // #0f172a
     const accentColor = [37, 99, 235];   // #2563eb
-    const goldColor = isPaid ? [4, 120, 87] : [217, 119, 6]; // #047857 Green if paid, #d97706 Gold if pending
+    const goldColor = isPaid ? [4, 120, 87] : [217, 119, 6]; // #047857 Green if official/paid, #d97706 Gold if pending
     const grayColor = [100, 116, 139];  // #64748b
 
     // Header Brand
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(22);
     doc.setTextColor(...primaryColor);
-    doc.text('DamShop', 20, 24);
+    doc.text(settings?.storeName || 'DamShop', 20, 24);
     
     doc.setFontSize(9);
     doc.setTextColor(...accentColor);
@@ -724,23 +727,23 @@ export const downloadInvoiceFile = async (order, settings) => {
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(8.5);
     doc.setTextColor(...grayColor);
-    doc.text(settings?.address || 'Abidjan, Cote d\'Ivoire', 20, 35);
+    doc.text(settings?.address || 'Lomé, Togo', 20, 35);
 
     // Invoice Title & Status Meta Right
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(13);
     doc.setTextColor(...goldColor);
-    const docTitle = isPaid ? `FACTURE ACQUITTEE N° ${order.id}` : `BON DE COMMANDE N° ${order.id}`;
+    const docTitle = isPaid ? `FACTURE ACQUITTÉE N° ${order.id}` : `BON DE COMMANDE N° ${order.id}`;
     doc.text(docTitle, 190, 24, { align: 'right' });
     
     doc.setFontSize(8.5);
     doc.setTextColor(...grayColor);
     doc.setFont('helvetica', 'normal');
-    doc.text(`Date : ${order.date}`, 190, 30, { align: 'right' });
+    doc.text(`Date : ${order.date || new Date().toISOString().split('T')[0]}`, 190, 30, { align: 'right' });
     
     doc.setFont('helvetica', 'bold');
     doc.setTextColor(isPaid ? 4 : 180, isPaid ? 120 : 83, isPaid ? 87 : 9);
-    const statusText = isPaid ? 'STATUT : PAYE & ACQUITTE (RECU OFFICIEL)' : 'STATUT : A PAYER A LA LIVRAISON';
+    const statusText = isPaid ? 'STATUT : PAYÉ & ACQUITTÉ (FACTURE OFFICIELLE)' : 'STATUT : À PAYER À LA LIVRAISON';
     doc.text(statusText, 190, 35, { align: 'right' });
 
     // Horizontal Separator Line
@@ -757,18 +760,18 @@ export const downloadInvoiceFile = async (order, settings) => {
     doc.setTextColor(...primaryColor);
     doc.text('CLIENT :', 24, 51);
     doc.setFont('helvetica', 'normal');
-    doc.text(`${order.customerName} (${order.phone})`, 40, 51);
+    doc.text(`${order.customerName} (${order.phone || order.customerPhone || ''})`, 40, 51);
 
     doc.setFont('helvetica', 'bold');
     doc.text('LIVRAISON :', 24, 57);
     doc.setFont('helvetica', 'normal');
-    doc.text(`${order.address || 'Abidjan, Cote d\'Ivoire'}`, 44, 57);
+    doc.text(`${order.address || order.deliveryAddress || 'Lomé, Togo'}`, 44, 57);
 
     doc.setFont('helvetica', 'bold');
     doc.text('PAIEMENT :', 24, 63);
     doc.setFont('helvetica', 'normal');
     doc.setTextColor(...accentColor);
-    doc.text(`${order.paymentMethod || 'Mobile Money'} (${isPaid ? 'REGLÉ' : 'À RÉGLER AT DELIVERY'})`, 44, 63);
+    doc.text(`${order.paymentMethod || 'Mobile Money'} (${isPaid ? 'RÉGLÉ' : 'À RÉGLER À LA LIVRAISON'})`, 44, 63);
 
     // Table Header Row
     let y = 80;
@@ -789,7 +792,7 @@ export const downloadInvoiceFile = async (order, settings) => {
     // Table Items Rows
     doc.setFontSize(8.5);
 
-    order.items.forEach((item) => {
+    (order.items || []).forEach((item) => {
       doc.setFont('helvetica', 'bold');
       doc.setTextColor(...primaryColor);
       const cleanName = String(item.name || '').substring(0, 30);
@@ -801,33 +804,67 @@ export const downloadInvoiceFile = async (order, settings) => {
       doc.text(variantText, 78, y);
 
       doc.setTextColor(...primaryColor);
-      doc.text(String(item.quantity), 115, y, { align: 'center' });
+      doc.text(String(item.quantity || 1), 115, y, { align: 'center' });
       doc.text(formatPdfPrice(item.price), 150, y, { align: 'right' });
       doc.setFont('helvetica', 'bold');
-      doc.text(formatPdfPrice(item.price * item.quantity), 188, y, { align: 'right' });
+      doc.text(formatPdfPrice((item.price || 0) * (item.quantity || 1)), 188, y, { align: 'right' });
 
       y += 8;
     });
 
-    // Total Line Separator
+    // Subtotal, Delivery Fee & Total Breakdown Calculations
+    const itemsSubtotal = (order.items || []).reduce((sum, item) => sum + (Number(item.price || 0) * Number(item.quantity || 1)), 0);
+    const totalAmount = Number(order.total || 0);
+    const deliveryFeeAmount = Math.max(0, totalAmount - itemsSubtotal);
+
+    // Table Line Separator
     y += 2;
     doc.setDrawColor(226, 232, 240);
     doc.line(20, y, 190, y);
-    y += 9;
+    y += 7;
+
+    // Sous-total Articles Row
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(8.5);
+    doc.setTextColor(...grayColor);
+    doc.text('Sous-total Articles :', 140, y, { align: 'right' });
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(...primaryColor);
+    doc.text(formatPdfPrice(itemsSubtotal), 188, y, { align: 'right' });
+    y += 6;
+
+    // Frais de Livraison Row
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(...grayColor);
+    doc.text('Frais de Livraison :', 140, y, { align: 'right' });
+    doc.setFont('helvetica', 'bold');
+    if (deliveryFeeAmount > 0) {
+      doc.setTextColor(...primaryColor);
+      doc.text(formatPdfPrice(deliveryFeeAmount), 188, y, { align: 'right' });
+    } else {
+      doc.setTextColor(4, 120, 87);
+      doc.text('Gratuit (Offerte)', 188, y, { align: 'right' });
+    }
+    y += 7;
+
+    // Final Total Box Line
+    doc.setDrawColor(226, 232, 240);
+    doc.line(110, y - 2, 190, y - 2);
+    y += 3;
 
     // Total Amount Highlight
     doc.setFont('helvetica', 'bold');
-    doc.setFontSize(11.5);
+    doc.setFontSize(11);
     doc.setTextColor(...goldColor);
     const labelTotal = isPaid ? 'TOTAL PAYÉ & ACQUITTÉ' : 'TOTAL À PAYER À LA LIVRAISON';
-    doc.text(`${labelTotal} : ${formatPdfPrice(order.total)}`, 188, y, { align: 'right' });
+    doc.text(`${labelTotal} : ${formatPdfPrice(totalAmount)}`, 188, y, { align: 'right' });
 
     // Footer Copyright
     y += 18;
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(8);
     doc.setTextColor(...grayColor);
-    doc.text('Merci d\'avoir effectue vos achats sur DamShop ! Document officiel.', 105, y, { align: 'center' });
+    doc.text('Merci d\'avoir effectué vos achats sur DamShop ! Document officiel.', 105, y, { align: 'center' });
 
     // Save File
     const fileNamePrefix = isPaid ? 'Facture_Acquittee' : 'Bon_De_Commande';
