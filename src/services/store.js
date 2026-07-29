@@ -643,6 +643,208 @@ export const generateWhatsAppPaidReceiptLink = (order, settings) => {
   return `https://wa.me/${phone.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(text)}`;
 };
 
+// Internal PDF Generator Helper (Returns fully-rendered jsPDF instance)
+export const generateInvoicePdfDoc = async (order, settings, forceOfficialInvoice = false) => {
+  const isPaid = forceOfficialInvoice || order.status === 'Livré & Payé' || order.status === 'Payé' || order.status === 'Livré' || order.status === 'Expédié';
+
+  // Dynamically load jsPDF UMD script if not available
+  if (!window.jspdf) {
+    await new Promise((resolve, reject) => {
+      const script = document.createElement('script');
+      script.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
+      script.onload = resolve;
+      script.onerror = reject;
+      document.head.appendChild(script);
+    });
+  }
+
+  const formatPdfPrice = (amount) => {
+    if (amount === undefined || amount === null) return '0 FCFA';
+    const formatted = String(Math.round(amount)).replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+    return `${formatted} FCFA`;
+  };
+
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({
+    orientation: 'portrait',
+    unit: 'mm',
+    format: 'a4'
+  });
+
+  // Color Palette
+  const primaryColor = [15, 23, 42];  // #0f172a
+  const accentColor = [37, 99, 235];   // #2563eb
+  const goldColor = isPaid ? [4, 120, 87] : [217, 119, 6]; // #047857 Green if official/paid, #d97706 Gold if pending
+  const grayColor = [100, 116, 139];  // #64748b
+
+  // Header Brand
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(22);
+  doc.setTextColor(...primaryColor);
+  doc.text(settings?.storeName || 'DamShop', 20, 24);
+  
+  doc.setFontSize(9);
+  doc.setTextColor(...accentColor);
+  doc.text('BOUTIQUE E-COMMERCE & HIGH-TECH', 20, 30);
+
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(8.5);
+  doc.setTextColor(...grayColor);
+  doc.text(settings?.address || 'Lomé, Togo', 20, 35);
+
+  // Invoice Title & Status Meta Right
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(13);
+  doc.setTextColor(...goldColor);
+  const docTitle = isPaid ? `FACTURE ACQUITTÉE N° ${order.id}` : `BON DE COMMANDE N° ${order.id}`;
+  doc.text(docTitle, 190, 24, { align: 'right' });
+  
+  doc.setFontSize(8.5);
+  doc.setTextColor(...grayColor);
+  doc.setFont('helvetica', 'normal');
+  doc.text(`Date : ${order.date || new Date().toISOString().split('T')[0]}`, 190, 30, { align: 'right' });
+  
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(isPaid ? 4 : 180, isPaid ? 120 : 83, isPaid ? 87 : 9);
+  const statusText = isPaid ? 'STATUT : PAYÉ & ACQUITTÉ (FACTURE OFFICIELLE)' : 'STATUT : À PAYER À LA LIVRAISON';
+  doc.text(statusText, 190, 35, { align: 'right' });
+
+  // Horizontal Separator Line
+  doc.setDrawColor(226, 232, 240);
+  doc.setLineWidth(0.4);
+  doc.line(20, 40, 190, 40);
+
+  // Customer & Shipping Info Card (Gray Filled Box)
+  doc.setFillColor(isPaid ? 240 : 248, isPaid ? 253 : 250, isPaid ? 244 : 252);
+  doc.roundedRect(20, 44, 170, 28, 3, 3, 'F');
+
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(8.5);
+  doc.setTextColor(...primaryColor);
+  doc.text('CLIENT :', 24, 51);
+  doc.setFont('helvetica', 'normal');
+  doc.text(`${order.customerName} (${order.phone || order.customerPhone || ''})`, 40, 51);
+
+  doc.setFont('helvetica', 'bold');
+  doc.text('LIVRAISON :', 24, 57);
+  doc.setFont('helvetica', 'normal');
+  doc.text(`${order.address || order.deliveryAddress || 'Lomé, Togo'}`, 44, 57);
+
+  doc.setFont('helvetica', 'bold');
+  doc.text('PAIEMENT :', 24, 63);
+  doc.setFont('helvetica', 'normal');
+  doc.setTextColor(...accentColor);
+  doc.text(`${order.paymentMethod || 'Mobile Money'} (${isPaid ? 'RÉGLÉ' : 'À RÉGLER À LA LIVRAISON'})`, 44, 63);
+
+  // Table Header Row
+  let y = 80;
+  doc.setFillColor(241, 245, 249);
+  doc.rect(20, y - 5, 170, 7, 'F');
+  
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(8);
+  doc.setTextColor(...grayColor);
+  doc.text('ARTICLE', 23, y);
+  doc.text('VARIANTE', 78, y);
+  doc.text('QTE', 115, y, { align: 'center' });
+  doc.text('P.U (FCFA)', 150, y, { align: 'right' });
+  doc.text('TOTAL (FCFA)', 188, y, { align: 'right' });
+
+  y += 8;
+
+  // Table Items Rows
+  doc.setFontSize(8.5);
+
+  (order.items || []).forEach((item) => {
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(...primaryColor);
+    const cleanName = String(item.name || '').substring(0, 30);
+    doc.text(cleanName, 23, y);
+    
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(...grayColor);
+    const variantText = `${item.size ? 'T:' + item.size : ''} ${item.color ? ' C:' + item.color : ''}`;
+    doc.text(variantText, 78, y);
+
+    doc.setTextColor(...primaryColor);
+    doc.text(String(item.quantity || 1), 115, y, { align: 'center' });
+    doc.text(formatPdfPrice(item.price), 150, y, { align: 'right' });
+    doc.setFont('helvetica', 'bold');
+    doc.text(formatPdfPrice((item.price || 0) * (item.quantity || 1)), 188, y, { align: 'right' });
+
+    y += 8;
+  });
+
+  // Subtotal, Delivery Fee & Total Breakdown Calculations
+  const itemsSubtotal = (order.items || []).reduce((sum, item) => sum + (Number(item.price || 0) * Number(item.quantity || 1)), 0);
+  const totalAmount = Number(order.total || 0);
+  const deliveryFeeAmount = Math.max(0, totalAmount - itemsSubtotal);
+
+  // Table Line Separator
+  y += 2;
+  doc.setDrawColor(226, 232, 240);
+  doc.line(20, y, 190, y);
+  y += 7;
+
+  // Sous-total Articles Row
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(8.5);
+  doc.setTextColor(...grayColor);
+  doc.text('Sous-total Articles :', 140, y, { align: 'right' });
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(...primaryColor);
+  doc.text(formatPdfPrice(itemsSubtotal), 188, y, { align: 'right' });
+  y += 6;
+
+  // Frais de Livraison Row
+  doc.setFont('helvetica', 'normal');
+  doc.setTextColor(...grayColor);
+  doc.text('Frais de Livraison :', 140, y, { align: 'right' });
+  doc.setFont('helvetica', 'bold');
+  if (deliveryFeeAmount > 0) {
+    doc.setTextColor(...primaryColor);
+    doc.text(formatPdfPrice(deliveryFeeAmount), 188, y, { align: 'right' });
+  } else {
+    doc.setTextColor(4, 120, 87);
+    doc.text('Gratuit (Offerte)', 188, y, { align: 'right' });
+  }
+  y += 7;
+
+  // Final Total Box Line
+  doc.setDrawColor(226, 232, 240);
+  doc.line(110, y - 2, 190, y - 2);
+  y += 3;
+
+  // Total Amount Highlight
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(11);
+  doc.setTextColor(...goldColor);
+  const labelTotal = isPaid ? 'TOTAL PAYÉ & ACQUITTÉ' : 'TOTAL À PAYER À LA LIVRAISON';
+  doc.text(`${labelTotal} : ${formatPdfPrice(totalAmount)}`, 188, y, { align: 'right' });
+
+  // Footer Copyright
+  y += 18;
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(8);
+  doc.setTextColor(...grayColor);
+  doc.text('Merci d\'avoir effectué vos achats sur DamShop ! Document officiel.', 105, y, { align: 'center' });
+
+  return doc;
+};
+
+// Direct Instant Native Vector PDF Receipt Generator (Downloads PDF file)
+export const downloadInvoiceFile = async (order, settings, forceOfficialInvoice = false) => {
+  try {
+    const isPaid = forceOfficialInvoice || order.status === 'Livré & Payé' || order.status === 'Payé' || order.status === 'Livré' || order.status === 'Expédié';
+    const doc = await generateInvoicePdfDoc(order, settings, forceOfficialInvoice);
+    const fileNamePrefix = isPaid ? 'Facture_Acquittee' : 'Bon_De_Commande';
+    doc.save(`${fileNamePrefix}_DamShop_${order.id}.pdf`);
+  } catch (err) {
+    console.error('jsPDF generation error:', err);
+    window.print();
+  }
+};
+
 // 1-Click Share Native PDF File + Full Text (Mobile) or Download + Link (Desktop)
 export const shareOrSendPdfReceipt = async (order, settings, forceOfficialInvoice = false) => {
   const isPaid = forceOfficialInvoice || order.status === 'Livré & Payé' || order.status === 'Payé' || order.status === 'Livré';
@@ -650,14 +852,11 @@ export const shareOrSendPdfReceipt = async (order, settings, forceOfficialInvoic
   const fileName = `${fileNamePrefix}_DamShop_${order.id}.pdf`;
   const fullText = generateWhatsAppPaidReceiptMessageText(order, settings);
 
-  // Always generate/download PDF first for safety
-  await downloadInvoiceFile(order, settings, forceOfficialInvoice);
+  try {
+    const doc = await generateInvoicePdfDoc(order, settings, forceOfficialInvoice);
 
-  // Try Native Mobile File Share API if supported
-  if (navigator.share && navigator.canShare && window.jspdf) {
-    try {
-      const { jsPDF } = window.jspdf;
-      const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+    // Try Native Mobile File Share API if supported
+    if (navigator.share && navigator.canShare) {
       const pdfBlob = doc.output('blob');
       const pdfFile = new File([pdfBlob], fileName, { type: 'application/pdf' });
 
@@ -669,210 +868,17 @@ export const shareOrSendPdfReceipt = async (order, settings, forceOfficialInvoic
         });
         return;
       }
-    } catch (e) {
-      console.warn('Native Web Share file fallback:', e);
     }
+
+    // Download PDF file locally
+    doc.save(fileName);
+  } catch (e) {
+    console.warn('PDF Share Error:', e);
   }
 
   // Desktop PC Fallback: Open WhatsApp Web chat with receipt URL link
   const waUrl = generateWhatsAppPaidReceiptLink(order, settings);
   window.open(waUrl, '_blank');
-};
-
-// Direct Instant Native Vector PDF Receipt Generator (Distinguishes Unpaid vs Paid Invoice)
-export const downloadInvoiceFile = async (order, settings, forceOfficialInvoice = false) => {
-  try {
-    const isPaid = forceOfficialInvoice || order.status === 'Livré & Payé' || order.status === 'Payé' || order.status === 'Livré' || order.status === 'Expédié';
-
-    // Dynamically load jsPDF UMD script if not available
-    if (!window.jspdf) {
-      await new Promise((resolve, reject) => {
-        const script = document.createElement('script');
-        script.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
-        script.onload = resolve;
-        script.onerror = reject;
-        document.head.appendChild(script);
-      });
-    }
-
-    const formatPdfPrice = (amount) => {
-      if (amount === undefined || amount === null) return '0 FCFA';
-      const formatted = String(Math.round(amount)).replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
-      return `${formatted} FCFA`;
-    };
-
-    const { jsPDF } = window.jspdf;
-    const doc = new jsPDF({
-      orientation: 'portrait',
-      unit: 'mm',
-      format: 'a4'
-    });
-
-    // Color Palette
-    const primaryColor = [15, 23, 42];  // #0f172a
-    const accentColor = [37, 99, 235];   // #2563eb
-    const goldColor = isPaid ? [4, 120, 87] : [217, 119, 6]; // #047857 Green if official/paid, #d97706 Gold if pending
-    const grayColor = [100, 116, 139];  // #64748b
-
-    // Header Brand
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(22);
-    doc.setTextColor(...primaryColor);
-    doc.text(settings?.storeName || 'DamShop', 20, 24);
-    
-    doc.setFontSize(9);
-    doc.setTextColor(...accentColor);
-    doc.text('BOUTIQUE E-COMMERCE & HIGH-TECH', 20, 30);
-
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(8.5);
-    doc.setTextColor(...grayColor);
-    doc.text(settings?.address || 'Lomé, Togo', 20, 35);
-
-    // Invoice Title & Status Meta Right
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(13);
-    doc.setTextColor(...goldColor);
-    const docTitle = isPaid ? `FACTURE ACQUITTÉE N° ${order.id}` : `BON DE COMMANDE N° ${order.id}`;
-    doc.text(docTitle, 190, 24, { align: 'right' });
-    
-    doc.setFontSize(8.5);
-    doc.setTextColor(...grayColor);
-    doc.setFont('helvetica', 'normal');
-    doc.text(`Date : ${order.date || new Date().toISOString().split('T')[0]}`, 190, 30, { align: 'right' });
-    
-    doc.setFont('helvetica', 'bold');
-    doc.setTextColor(isPaid ? 4 : 180, isPaid ? 120 : 83, isPaid ? 87 : 9);
-    const statusText = isPaid ? 'STATUT : PAYÉ & ACQUITTÉ (FACTURE OFFICIELLE)' : 'STATUT : À PAYER À LA LIVRAISON';
-    doc.text(statusText, 190, 35, { align: 'right' });
-
-    // Horizontal Separator Line
-    doc.setDrawColor(226, 232, 240);
-    doc.setLineWidth(0.4);
-    doc.line(20, 40, 190, 40);
-
-    // Customer & Shipping Info Card (Gray Filled Box)
-    doc.setFillColor(isPaid ? 240 : 248, isPaid ? 253 : 250, isPaid ? 244 : 252);
-    doc.roundedRect(20, 44, 170, 28, 3, 3, 'F');
-
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(8.5);
-    doc.setTextColor(...primaryColor);
-    doc.text('CLIENT :', 24, 51);
-    doc.setFont('helvetica', 'normal');
-    doc.text(`${order.customerName} (${order.phone || order.customerPhone || ''})`, 40, 51);
-
-    doc.setFont('helvetica', 'bold');
-    doc.text('LIVRAISON :', 24, 57);
-    doc.setFont('helvetica', 'normal');
-    doc.text(`${order.address || order.deliveryAddress || 'Lomé, Togo'}`, 44, 57);
-
-    doc.setFont('helvetica', 'bold');
-    doc.text('PAIEMENT :', 24, 63);
-    doc.setFont('helvetica', 'normal');
-    doc.setTextColor(...accentColor);
-    doc.text(`${order.paymentMethod || 'Mobile Money'} (${isPaid ? 'RÉGLÉ' : 'À RÉGLER À LA LIVRAISON'})`, 44, 63);
-
-    // Table Header Row
-    let y = 80;
-    doc.setFillColor(241, 245, 249);
-    doc.rect(20, y - 5, 170, 7, 'F');
-    
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(8);
-    doc.setTextColor(...grayColor);
-    doc.text('ARTICLE', 23, y);
-    doc.text('VARIANTE', 78, y);
-    doc.text('QTE', 115, y, { align: 'center' });
-    doc.text('P.U (FCFA)', 150, y, { align: 'right' });
-    doc.text('TOTAL (FCFA)', 188, y, { align: 'right' });
-
-    y += 8;
-
-    // Table Items Rows
-    doc.setFontSize(8.5);
-
-    (order.items || []).forEach((item) => {
-      doc.setFont('helvetica', 'bold');
-      doc.setTextColor(...primaryColor);
-      const cleanName = String(item.name || '').substring(0, 30);
-      doc.text(cleanName, 23, y);
-      
-      doc.setFont('helvetica', 'normal');
-      doc.setTextColor(...grayColor);
-      const variantText = `${item.size ? 'T:' + item.size : ''} ${item.color ? ' C:' + item.color : ''}`;
-      doc.text(variantText, 78, y);
-
-      doc.setTextColor(...primaryColor);
-      doc.text(String(item.quantity || 1), 115, y, { align: 'center' });
-      doc.text(formatPdfPrice(item.price), 150, y, { align: 'right' });
-      doc.setFont('helvetica', 'bold');
-      doc.text(formatPdfPrice((item.price || 0) * (item.quantity || 1)), 188, y, { align: 'right' });
-
-      y += 8;
-    });
-
-    // Subtotal, Delivery Fee & Total Breakdown Calculations
-    const itemsSubtotal = (order.items || []).reduce((sum, item) => sum + (Number(item.price || 0) * Number(item.quantity || 1)), 0);
-    const totalAmount = Number(order.total || 0);
-    const deliveryFeeAmount = Math.max(0, totalAmount - itemsSubtotal);
-
-    // Table Line Separator
-    y += 2;
-    doc.setDrawColor(226, 232, 240);
-    doc.line(20, y, 190, y);
-    y += 7;
-
-    // Sous-total Articles Row
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(8.5);
-    doc.setTextColor(...grayColor);
-    doc.text('Sous-total Articles :', 140, y, { align: 'right' });
-    doc.setFont('helvetica', 'bold');
-    doc.setTextColor(...primaryColor);
-    doc.text(formatPdfPrice(itemsSubtotal), 188, y, { align: 'right' });
-    y += 6;
-
-    // Frais de Livraison Row
-    doc.setFont('helvetica', 'normal');
-    doc.setTextColor(...grayColor);
-    doc.text('Frais de Livraison :', 140, y, { align: 'right' });
-    doc.setFont('helvetica', 'bold');
-    if (deliveryFeeAmount > 0) {
-      doc.setTextColor(...primaryColor);
-      doc.text(formatPdfPrice(deliveryFeeAmount), 188, y, { align: 'right' });
-    } else {
-      doc.setTextColor(4, 120, 87);
-      doc.text('Gratuit (Offerte)', 188, y, { align: 'right' });
-    }
-    y += 7;
-
-    // Final Total Box Line
-    doc.setDrawColor(226, 232, 240);
-    doc.line(110, y - 2, 190, y - 2);
-    y += 3;
-
-    // Total Amount Highlight
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(11);
-    doc.setTextColor(...goldColor);
-    const labelTotal = isPaid ? 'TOTAL PAYÉ & ACQUITTÉ' : 'TOTAL À PAYER À LA LIVRAISON';
-    doc.text(`${labelTotal} : ${formatPdfPrice(totalAmount)}`, 188, y, { align: 'right' });
-
-    // Footer Copyright
-    y += 18;
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(8);
-    doc.setTextColor(...grayColor);
-    doc.text('Merci d\'avoir effectué vos achats sur DamShop ! Document officiel.', 105, y, { align: 'center' });
-
-    // Save File
-    const fileNamePrefix = isPaid ? 'Facture_Acquittee' : 'Bon_De_Commande';
-    doc.save(`${fileNamePrefix}_DamShop_${order.id}.pdf`);
-  } catch (err) {
-    console.error('jsPDF generation error:', err);
-    window.print();
-  }
 };
 
 export const formatCurrency = (amount) => {
