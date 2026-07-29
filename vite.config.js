@@ -11,10 +11,15 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
+      workbox: {
+        cleanupOutdatedCaches: true,
+        skipWaiting: true,
+        clientsClaim: true
+      },
       devOptions: {
         enabled: true
       },
-      includeAssets: ['favicon.svg', 'masked-icon.svg'],
+      includeAssets: ['favicon.svg', 'masked-icon.svg', 'pwa-192x192.png', 'pwa-512x512.png'],
       manifest: {
         name: 'Xor Boutique - Boutique en Ligne PWA',
         short_name: 'Xor Boutique',
