@@ -35,8 +35,21 @@ import { isSupabaseConfigured, subscribeToSupabaseRealtimeOrders } from './servi
 import { Bell, ShoppingBag, X } from 'lucide-react';
 
 export default function App() {
-  // App View & Admin State
-  const [isAdminView, setIsAdminView] = useState(false);
+  // App View & Admin State - Initialized synchronously from URL to prevent flash of storefront on refresh
+  const [isAdminView, setIsAdminView] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    const pathname = window.location.pathname.toLowerCase();
+    const params = new URLSearchParams(window.location.search);
+    const hash = window.location.hash.toLowerCase();
+
+    const hasProductParam = params.has('product') || params.has('p') || hash.includes('product=');
+    if (hasProductParam) return false;
+
+    const isLoginPath = pathname === '/login' || pathname === '/login/' || pathname.endsWith('/login') || hash === '#login';
+    const isAdminPath = pathname === '/admin' || pathname === '/admin/' || pathname.endsWith('/admin') || hash === '#admin' || params.get('admin');
+
+    return isLoginPath || isAdminPath;
+  });
   const [isAdminAuthenticated, setIsAdminAuthenticated] = useState(() => {
     return localStorage.getItem('damshop_admin_authenticated') === 'true' || 
            sessionStorage.getItem('damshop_admin_authenticated') === 'true';
