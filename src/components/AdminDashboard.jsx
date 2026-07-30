@@ -77,7 +77,9 @@ import {
   getAdminAccounts,
   saveAdminAccount,
   deleteAdminAccount,
-  getActiveAdminSession
+  getActiveAdminSession,
+  getVisitorAnalytics,
+  resetVisitorAnalytics
 } from '../services/store';
 import { getSupabaseConfig, saveSupabaseConfig, isSupabaseConfigured } from '../services/supabaseClient';
 import AdminSidebar from './admin/AdminSidebar';
