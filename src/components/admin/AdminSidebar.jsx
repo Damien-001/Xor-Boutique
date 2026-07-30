@@ -190,11 +190,12 @@ export default function AdminSidebar({
                   color: isActive ? '#ffffff' : '#334155',
                   fontWeight: isActive ? 800 : 600,
                   cursor: 'pointer',
+                  textAlign: 'left',
                   transition: 'all 0.2s cubic-bezier(0.16, 1, 0.3, 1)',
                   boxShadow: isActive ? '0 4px 14px rgba(15, 23, 42, 0.25)' : 'none'
                 }}
               >
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flex: 1, minWidth: 0, textAlign: 'left' }}>
                   {/* Colored Icon Square Box */}
                   <div style={{
                     width: '34px',
@@ -208,7 +209,7 @@ export default function AdminSidebar({
                   }}>
                     <IconComp size={18} color={isActive ? '#ffffff' : item.color} />
                   </div>
-                  <span style={{ fontSize: '0.88rem' }}>{item.label}</span>
+                  <span style={{ fontSize: '0.88rem', textAlign: 'left', flex: 1, display: 'block', lineHeight: 1.25 }}>{item.label}</span>
                 </div>
 
                 {item.count !== undefined && (
@@ -219,7 +220,8 @@ export default function AdminSidebar({
                     background: (item.id === 'orders' && item.count > 0) ? '#ef4444' : (isActive ? 'rgba(255, 255, 255, 0.25)' : '#e2e8f0'),
                     color: (item.id === 'orders' && item.count > 0) ? '#ffffff' : (isActive ? '#ffffff' : '#475569'),
                     fontWeight: 800,
-                    boxShadow: (item.id === 'orders' && item.count > 0) ? '0 2px 8px rgba(239, 68, 68, 0.4)' : 'none'
+                    boxShadow: (item.id === 'orders' && item.count > 0) ? '0 2px 8px rgba(239, 68, 68, 0.4)' : 'none',
+                    flexShrink: 0
                   }}>
                     {item.count}
                   </span>
@@ -235,19 +237,19 @@ export default function AdminSidebar({
         <button
           onClick={() => { onBackToStore(); if (isMobile && onCloseMobile) onCloseMobile(); }}
           className="btn btn-secondary"
-          style={{ width: '100%', justifyContent: 'flex-start', gap: '0.65rem', padding: '0.8rem 1rem', borderRadius: '14px', fontWeight: 700 }}
+          style={{ width: '100%', justifyContent: 'flex-start', textAlign: 'left', gap: '0.65rem', padding: '0.8rem 1rem', borderRadius: '14px', fontWeight: 700 }}
         >
           <Eye size={18} color="#2563eb" />
-          <span>Aperçu Client (Boutique)</span>
+          <span style={{ textAlign: 'left' }}>Aperçu Client (Boutique)</span>
         </button>
 
         <button
           onClick={() => { onLogout(); if (isMobile && onCloseMobile) onCloseMobile(); }}
           className="btn btn-secondary"
-          style={{ width: '100%', justifyContent: 'flex-start', gap: '0.65rem', padding: '0.8rem 1rem', borderRadius: '14px', borderColor: '#fca5a5', background: '#fef2f2', color: '#dc2626', fontWeight: 700 }}
+          style={{ width: '100%', justifyContent: 'flex-start', textAlign: 'left', gap: '0.65rem', padding: '0.8rem 1rem', borderRadius: '14px', borderColor: '#fca5a5', background: '#fef2f2', color: '#dc2626', fontWeight: 700 }}
         >
           <LogOut size={18} color="#dc2626" />
-          <span>Déconnexion de l'Admin</span>
+          <span style={{ textAlign: 'left' }}>Déconnexion de l'Admin</span>
         </button>
 
         <div style={{ textAlign: 'center', marginTop: '0.25rem' }}>
