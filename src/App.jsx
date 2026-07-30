@@ -12,7 +12,6 @@ import InvoiceModal from './components/InvoiceModal';
 import OrderTrackingModal from './components/OrderTrackingModal';
 import AdminDashboard from './components/AdminDashboard';
 import AdminLoginPage from './components/AdminLoginPage';
-import RecentlyViewedBar from './components/RecentlyViewedBar';
 
 import { 
   getCategories, 
@@ -28,7 +27,8 @@ import {
   subscribeToOrderNotifications,
   requestNotificationPermission,
   formatCurrency,
-  pullDataFromSupabase
+  pullDataFromSupabase,
+  trackVisitorCountry
 } from './services/store';
 import { isSupabaseConfigured, subscribeToSupabaseRealtimeOrders } from './services/supabaseClient';
 
@@ -110,8 +110,10 @@ export default function App() {
     });
   };
 
-  // Listen to store updates
+  // Listen to store updates & auto-track visitor country geolocation
   useEffect(() => {
+    trackVisitorCountry().catch(err => console.warn('Visitor country tracking:', err));
+
     const unsubscribe = subscribeToStore(() => {
       setCategories(getCategories());
       setProducts(getProducts());
@@ -274,6 +276,10 @@ export default function App() {
       if (found) {
         setDirectProductPage(found);
         setIsAdminView(false);
+        // Ensure browser address bar displays clean public URL without /admin or /login prefix
+        if (window.location.pathname.startsWith('/admin') || window.location.pathname.startsWith('/login')) {
+          window.history.replaceState({}, '', '/?product=' + targetId);
+        }
       }
     }
   }, [products]);
@@ -281,10 +287,7 @@ export default function App() {
   // Handle returning from direct product page to full store
   const handleBackToFullStore = () => {
     setDirectProductPage(null);
-    const url = new URL(window.location.href);
-    url.searchParams.delete('product');
-    url.searchParams.delete('p');
-    window.history.replaceState({}, '', url.pathname + (url.search ? url.search : ''));
+    window.history.replaceState({}, '', '/');
   };
 
   // Centralized Add-to-Cart handler that adds item and opens Cart Drawer automatically
@@ -545,21 +548,6 @@ export default function App() {
           order={selectedInvoiceOrder}
           settings={settings}
           onClose={() => setSelectedInvoiceOrder(null)}
-        />
-      )}
-
-      {/* Recently Viewed Products Floating Dock */}
-      {!isAdminView && showRecentlyViewed && recentlyViewedIds.length > 0 && (
-        <RecentlyViewedBar
-          products={recentlyViewedIds.map(id => products.find(p => p.id === id)).filter(Boolean)}
-          onSelectProduct={(p) => {
-            if (directProductPage) {
-              setDirectProductPage(p);
-            } else {
-              handleOpenQuickViewModal(p);
-            }
-          }}
-          onClose={() => setShowRecentlyViewed(false)}
         />
       )}
 

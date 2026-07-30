@@ -47,7 +47,9 @@ import {
   Smartphone,
   Crown,
   Heart,
-  ShieldAlert
+  ShieldAlert,
+  Globe,
+  RefreshCw
 } from 'lucide-react';
 import { 
   getCategories, 
@@ -332,7 +334,7 @@ CREATE POLICY "Admin All avis" ON public.reviews FOR ALL USING (true);`;
   const [copiedAdminProductId, setCopiedAdminProductId] = useState(null);
 
   const handleCopyAdminProductLink = (productId) => {
-    const shareUrl = `${window.location.origin}${window.location.pathname}?product=${productId}`;
+    const shareUrl = `${window.location.origin}/?product=${productId}`;
     navigator.clipboard.writeText(shareUrl).then(() => {
       setCopiedAdminProductId(productId);
       setTimeout(() => setCopiedAdminProductId(null), 2500);
@@ -1648,45 +1650,156 @@ CREATE POLICY "Admin All avis" ON public.reviews FOR ALL USING (true);`;
             />
           )}
 
-          {/* TAB 4: ANALYTICS */}
-          {activeTab === 'analytics' && (
-            <div style={{ width: '100%', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1.5rem', boxSizing: 'border-box' }}>
-              <div className="glass-panel" style={{ padding: '1.75rem', background: '#ffffff', borderRadius: '16px', boxSizing: 'border-box' }}>
-                <h4 className="font-display" style={{ fontSize: '1.2rem', marginBottom: '1.25rem', color: '#0f172a', fontWeight: 800 }}>Répartition par Catégorie</h4>
-                {categories.map(cat => (
-                  <div key={cat.id} style={{ marginBottom: '1.25rem' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.88rem', marginBottom: '0.35rem' }}>
-                      <span style={{ fontWeight: 600 }}>{cat.name}</span>
-                      <span className="font-mono" style={{ color: '#64748b' }}>{cat.count || 0} articles</span>
-                    </div>
-                    <div style={{ background: '#f1f5f9', borderRadius: '6px', height: '10px', overflow: 'hidden' }}>
-                      <div style={{
-                        width: `${Math.min(100, ((cat.count || 0) / Math.max(1, products.length)) * 100)}%`,
-                        background: cat.color || '#2563eb',
-                        height: '100%'
-                      }}></div>
-                    </div>
-                  </div>
-                ))}
-              </div>
+          {/* TAB 4: ANALYTICS & VISITOR GEOLOCATION */}
+          {activeTab === 'analytics' && (() => {
+            const visitorData = getVisitorAnalytics();
+            const totalVisits = visitorData.totalVisits || 0;
+            const countriesList = Object.values(visitorData.countries || {}).sort((a, b) => (b.visits || 0) - (a.visits || 0));
+            const topCountry = countriesList[0] || null;
+            const topPercentage = (topCountry && totalVisits > 0) ? Math.round((topCountry.visits / totalVisits) * 100) : 0;
 
-              <div className="glass-panel" style={{ padding: '1.75rem', background: '#ffffff', borderRadius: '16px', boxSizing: 'border-box' }}>
-                <h4 className="font-display" style={{ fontSize: '1.2rem', marginBottom: '1.25rem', color: '#0f172a', fontWeight: 800 }}>Indicateurs Clés</h4>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-                  <div className="glass-card" style={{ padding: '1.25rem', background: '#f8fafc', borderRadius: '12px' }}>
-                    <div style={{ color: '#64748b', fontSize: '0.8rem', fontWeight: 600, textTransform: 'uppercase' }}>Panier Moyen Estimé</div>
-                    <div className="font-mono" style={{ fontSize: '1.4rem', fontWeight: 800, color: '#2563eb', marginTop: '0.25rem' }}>
-                                  {formatCurrency(orders.length > 0 ? Math.round(totalRevenue / orders.length) : 0)}
+            return (
+              <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '1.5rem', boxSizing: 'border-box' }}>
+                
+                {/* GEOLOCATION VISITOR ANALYTICS PANEL */}
+                <div className="glass-panel" style={{ padding: '1.75rem', background: '#ffffff', borderRadius: '16px', boxSizing: 'border-box' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem', marginBottom: '1.5rem', borderBottom: '1px solid #e2e8f0', paddingBottom: '1rem' }}>
+                    <div>
+                      <h3 className="font-display" style={{ fontSize: '1.3rem', fontWeight: 800, color: '#0f172a', margin: 0, display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                        <Globe size={22} color="#2563eb" /> 🌍 Géolocalisation & Trafic par Pays (Visiteurs)
+                      </h3>
+                      <p style={{ color: '#64748b', fontSize: '0.85rem', marginTop: '0.25rem' }}>
+                        Origine géographique réelle des utilisateurs et clients qui consultent votre boutique en ligne.
+                      </p>
+                    </div>
+
+                    <button
+                      className="btn btn-secondary"
+                      onClick={() => {
+                        if (confirm('Voulez-vous réinitialiser les statistiques de géolocalisation des visiteurs ?')) {
+                          resetVisitorAnalytics();
+                        }
+                      }}
+                      style={{ fontSize: '0.8rem', padding: '0.45rem 0.85rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}
+                      title="Réinitialiser les données de visite"
+                    >
+                      <RefreshCw size={14} /> Réinitialiser
+                    </button>
+                  </div>
+
+                  {/* Summary Metric Cards */}
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem', marginBottom: '1.75rem' }}>
+                    <div className="glass-card" style={{ padding: '1.1rem', background: '#f8fafc', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
+                      <div style={{ color: '#64748b', fontSize: '0.78rem', fontWeight: 700, textTransform: 'uppercase' }}>Total Visites Enregistrées</div>
+                      <div className="font-mono" style={{ fontSize: '1.5rem', fontWeight: 800, color: '#2563eb', marginTop: '0.25rem' }}>
+                        {totalVisits} <span style={{ fontSize: '0.85rem', color: '#64748b', fontWeight: 600 }}>visites</span>
+                      </div>
+                    </div>
+
+                    <div className="glass-card" style={{ padding: '1.1rem', background: '#f8fafc', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
+                      <div style={{ color: '#64748b', fontSize: '0.78rem', fontWeight: 700, textTransform: 'uppercase' }}>Nombre de Pays Visiteurs</div>
+                      <div className="font-mono" style={{ fontSize: '1.5rem', fontWeight: 800, color: '#059669', marginTop: '0.25rem' }}>
+                        {countriesList.length} <span style={{ fontSize: '0.85rem', color: '#64748b', fontWeight: 600 }}>pays</span>
+                      </div>
+                    </div>
+
+                    <div className="glass-card" style={{ padding: '1.1rem', background: '#f8fafc', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
+                      <div style={{ color: '#64748b', fontSize: '0.78rem', fontWeight: 700, textTransform: 'uppercase' }}>Pays n°1 Source de Trafic</div>
+                      <div style={{ fontSize: '1.15rem', fontWeight: 800, color: '#0f172a', marginTop: '0.25rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                        {topCountry ? `${topCountry.flag} ${topCountry.name}` : 'Aucune donnée'}
+                        {topCountry && <span style={{ fontSize: '0.8rem', color: '#2563eb', fontWeight: 700 }}>({topPercentage}%)</span>}
+                      </div>
                     </div>
                   </div>
-                  <div className="glass-card" style={{ padding: '1.25rem', background: '#f8fafc', borderRadius: '12px' }}>
-                    <div style={{ color: '#64748b', fontSize: '0.8rem', fontWeight: 600, textTransform: 'uppercase' }}>Paiement Préféré</div>
-                    <div style={{ fontSize: '1.1rem', fontWeight: 700, color: '#0f172a', marginTop: '0.25rem' }}>Mobile Money (Moov Afrique & Mixx by Yas)</div>
+
+                  {/* Country Visitor Breakdown List */}
+                  <h4 style={{ fontSize: '1rem', fontWeight: 800, color: '#0f172a', marginBottom: '1rem' }}>
+                    Répartition détaillée du Trafic par Pays :
+                  </h4>
+
+                  {countriesList.length === 0 ? (
+                    <div style={{ textAlign: 'center', padding: '2rem 1rem', color: '#64748b', fontSize: '0.9rem' }}>
+                      Aucune visite enregistrée pour le moment.
+                    </div>
+                  ) : (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                      {countriesList.map(item => {
+                        const pct = totalVisits > 0 ? Math.round((item.visits / totalVisits) * 100) : 0;
+                        return (
+                          <div key={item.code} className="glass-card" style={{ padding: '1rem 1.25rem', background: '#f8fafc', borderRadius: '12px', border: '1px solid #f1f5f9' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem', flexWrap: 'wrap', gap: '0.5rem' }}>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                                <span style={{ fontSize: '1.5rem', lineHeight: 1 }}>{item.flag}</span>
+                                <span style={{ fontWeight: 800, fontSize: '0.95rem', color: '#0f172a' }}>{item.name} ({item.code})</span>
+                              </div>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                                <span className="font-mono" style={{ fontWeight: 800, fontSize: '0.95rem', color: '#2563eb' }}>
+                                  {item.visits} {item.visits > 1 ? 'visites' : 'visite'}
+                                </span>
+                                <span className="font-mono" style={{ fontSize: '0.85rem', fontWeight: 700, color: '#64748b', background: '#e2e8f0', padding: '0.15rem 0.5rem', borderRadius: '12px' }}>
+                                  {pct}% du trafic
+                                </span>
+                              </div>
+                            </div>
+
+                            {/* Progress Bar */}
+                            <div style={{ background: '#e2e8f0', borderRadius: '6px', height: '10px', overflow: 'hidden' }}>
+                              <div style={{
+                                width: `${pct}%`,
+                                background: 'linear-gradient(90deg, #2563eb 0%, #3b82f6 100%)',
+                                height: '100%',
+                                borderRadius: '6px',
+                                transition: 'width 0.5s ease'
+                              }}></div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+
+                {/* CATEGORY & KEY INDICATORS BREAKDOWN */}
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1.5rem' }}>
+                  <div className="glass-panel" style={{ padding: '1.75rem', background: '#ffffff', borderRadius: '16px', boxSizing: 'border-box' }}>
+                    <h4 className="font-display" style={{ fontSize: '1.2rem', marginBottom: '1.25rem', color: '#0f172a', fontWeight: 800 }}>Répartition par Catégorie</h4>
+                    {categories.map(cat => (
+                      <div key={cat.id} style={{ marginBottom: '1.25rem' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.88rem', marginBottom: '0.35rem' }}>
+                          <span style={{ fontWeight: 600 }}>{cat.name}</span>
+                          <span className="font-mono" style={{ color: '#64748b' }}>{cat.count || 0} articles</span>
+                        </div>
+                        <div style={{ background: '#f1f5f9', borderRadius: '6px', height: '10px', overflow: 'hidden' }}>
+                          <div style={{
+                            width: `${Math.min(100, ((cat.count || 0) / Math.max(1, products.length)) * 100)}%`,
+                            background: cat.color || '#2563eb',
+                            height: '100%'
+                          }}></div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="glass-panel" style={{ padding: '1.75rem', background: '#ffffff', borderRadius: '16px', boxSizing: 'border-box' }}>
+                    <h4 className="font-display" style={{ fontSize: '1.2rem', marginBottom: '1.25rem', color: '#0f172a', fontWeight: 800 }}>Indicateurs Clés</h4>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+                      <div className="glass-card" style={{ padding: '1.25rem', background: '#f8fafc', borderRadius: '12px' }}>
+                        <div style={{ color: '#64748b', fontSize: '0.8rem', fontWeight: 600, textTransform: 'uppercase' }}>Panier Moyen Estimé</div>
+                        <div className="font-mono" style={{ fontSize: '1.4rem', fontWeight: 800, color: '#2563eb', marginTop: '0.25rem' }}>
+                          {formatCurrency(orders.length > 0 ? Math.round(totalRevenue / orders.length) : 0)}
+                        </div>
+                      </div>
+                      <div className="glass-card" style={{ padding: '1.25rem', background: '#f8fafc', borderRadius: '12px' }}>
+                        <div style={{ color: '#64748b', fontSize: '0.8rem', fontWeight: 600, textTransform: 'uppercase' }}>Paiement Préféré</div>
+                        <div style={{ fontSize: '1.1rem', fontWeight: 700, color: '#0f172a', marginTop: '0.25rem' }}>Mobile Money (Moov Afrique & Mixx by Yas)</div>
+                      </div>
+                    </div>
                   </div>
                 </div>
+
               </div>
-            </div>
-          )}
+            );
+          })()}
 
           {/* TAB 6: SETTINGS & WHATSAPP CONFIG */}
           {activeTab === 'settings' && (

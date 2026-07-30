@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Star, ShoppingBag, Eye, Heart, AlertTriangle, Share2, Check, MessageCircle, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Star, ShoppingBag, Heart, AlertTriangle, Share2, Check, MessageCircle, ChevronLeft, ChevronRight } from 'lucide-react';
 import { formatCurrency, getSettings } from '../services/store';
 
 export default function ProductCard({ 
@@ -249,32 +249,6 @@ export default function ProductCard({
             title={copiedLink ? 'Lien copié !' : 'Partager / Copier le lien du produit'}
           >
             {copiedLink ? <Check size={16} color="#15803d" /> : <Share2 size={16} />}
-          </button>
-
-          {/* Quick View (Eye) Button */}
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              onQuickView(product);
-            }}
-            style={{
-              background: 'rgba(255, 255, 255, 0.92)',
-              backdropFilter: 'blur(4px)',
-              border: '1px solid #e2e8f0',
-              borderRadius: '50%',
-              width: '34px',
-              height: '34px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: '#0f172a',
-              cursor: 'pointer',
-              boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
-              transition: 'all 0.2s ease'
-            }}
-            title="Aperçu rapide du produit"
-          >
-            <Eye size={16} />
           </button>
 
           {/* Wishlist (Heart) Button */}

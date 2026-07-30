@@ -250,18 +250,6 @@ export default function MobileMenuDrawer({
                 <span style={{ fontWeight: 700 }}>{isAdminView ? 'Aller sur la Boutique' : 'Espace Administration'}</span>
               </button>
 
-              {/* PWA Install Button */}
-              {pwaInstallPrompt && (
-                <button 
-                  onClick={() => { onInstallPWA(); onClose(); }}
-                  className="btn btn-secondary"
-                  style={{ width: '100%', justifyContent: 'flex-start', gap: '0.75rem', padding: '0.85rem 1.25rem', borderRadius: '14px', borderColor: '#fde68a', background: '#fef3c7', color: '#b45309' }}
-                >
-                  <Download size={18} />
-                  <span style={{ fontWeight: 700 }}>Installer l'App sur Smartphone</span>
-                </button>
-              )}
-
             </div>
           </div>
 

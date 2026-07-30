@@ -109,19 +109,6 @@ export default function Navbar({
         {/* Navigation Action Buttons (RIGHT) */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', flexShrink: 0, paddingRight: '0.25rem' }}>
           
-          {/* PWA Install Button */}
-          {pwaInstallPrompt && (
-            <button 
-              className="btn btn-secondary"
-              onClick={onInstallPWA}
-              style={{ padding: '0.45rem 0.6rem', borderColor: '#d97706', color: '#b45309', background: '#fef3c7' }}
-              title="Installer DamShop sur votre téléphone/PC"
-            >
-              <Download size={15} />
-              <span className="hide-mobile" style={{ fontSize: '0.78rem' }}>Installer</span>
-            </button>
-          )}
-          
           {/* Store Switch & Notification Bell (Visible in Admin mode) */}
           {isAdminView && (
             <>

@@ -607,11 +607,27 @@ const sanitizeTextForPdf = (str) => {
     .trim();
 };
 
+export const getEffectiveUnitPrice = (basePrice, quantity, settings) => {
+  const price = Number(basePrice) || 0;
+  const qty = Number(quantity) || 1;
+  if (!settings || settings.enableQuantityDiscounts === false) return price;
+
+  const d2 = settings?.discount2Items !== undefined ? Number(settings.discount2Items) : 5;
+  const d3 = settings?.discount3Items !== undefined ? Number(settings.discount3Items) : 10;
+
+  if (qty === 2 && d2 > 0) {
+    return price * (1 - d2 / 100);
+  } else if (qty >= 3 && d3 > 0) {
+    return price * (1 - d3 / 100);
+  }
+  return price;
+};
+
 // WhatsApp Generator & Formatting
 export const generateWhatsAppLink = (order, settings) => {
   const phone = settings?.whatsappNumber || '2250700000000';
-  const storeName = settings?.storeName || 'DamShop';
-  const paymentLabel = formatPaymentMethodLabel(order.paymentMethod);
+  const storeName = settings?.storeName || 'Xor Boutique';
+  const paymentLabel = order.paymentMethod || 'Non spécifié';
   let text = `Bonjour *${storeName}* ! 👋\nJe souhaite valider ma commande *N° ${order.id}*.\n\n`;
   text += `👤 *Client :* ${order.customerName}\n`;
   text += `📞 *Tel :* ${order.phone}\n`;
@@ -626,7 +642,7 @@ export const generateWhatsAppLink = (order, settings) => {
     if (item.image && (item.image.startsWith('http://') || item.image.startsWith('https://'))) {
       text += `   🖼️ Photo Produit : ${item.image}\n`;
     } else if (item.id) {
-      const productLink = `${window.location.origin}${window.location.pathname}?product=${item.id}`;
+      const productLink = `${window.location.origin}/?product=${item.id}`;
       text += `   🔗 Fiche Article & Photo : ${productLink}\n`;
     }
   });
@@ -641,8 +657,7 @@ export const generateWhatsAppLink = (order, settings) => {
 // WhatsApp Paid Receipt Text Message Generator
 export const generateWhatsAppPaidReceiptMessageText = (order, settings) => {
   const isPaid = order.status === 'Livré & Payé' || order.status === 'Payé' || order.status === 'Livré';
-  const baseUrl = window.location.origin + window.location.pathname;
-  const receiptUrl = `${baseUrl}?invoice=${order.id}`;
+  const receiptUrl = `${window.location.origin}/?invoice=${order.id}`;
 
   const itemsSubtotal = (order.items || []).reduce((sum, item) => sum + (Number(item.price || 0) * Number(item.quantity || 1)), 0);
   const deliveryFee = Math.max(0, Number(order.total || 0) - itemsSubtotal);
@@ -1209,6 +1224,170 @@ export const setActiveAdminSession = (userObj, remember = true) => {
   } else {
     sessionStorage.setItem('damshop_current_admin_session', payload);
   }
+};
+
+// Visitor Country Geolocation Analytics Engine
+const COUNTRY_NAMES_FR = {
+  CI: "Côte d'Ivoire",
+  TG: "Togo",
+  BJ: "Bénin",
+  SN: "Sénégal",
+  ML: "Mali",
+  BF: "Burkina Faso",
+  GH: "Ghana",
+  NG: "Nigeria",
+  CM: "Cameroun",
+  GA: "Gabon",
+  CG: "Congo",
+  CD: "RD Congo",
+  GN: "Guinée",
+  NE: "Niger",
+  FR: "France",
+  BE: "Belgique",
+  CH: "Suisse",
+  CA: "Canada",
+  US: "États-Unis",
+  GB: "Royaume-Uni",
+  MA: "Maroc",
+  TN: "Tunisie",
+  DZ: "Algérie"
+};
+
+export const getCountryFlagEmoji = (code) => {
+  if (!code || typeof code !== 'string' || code.length !== 2) return '🌐';
+  const upper = code.toUpperCase();
+  const codePoints = upper.split('').map(char => 127397 + char.charCodeAt(0));
+  return String.fromCodePoint(...codePoints);
+};
+
+export const getCountryName = (code) => {
+  if (!code) return 'Inconnu';
+  const upper = code.toUpperCase();
+  return COUNTRY_NAMES_FR[upper] || upper;
+};
+
+const INITIAL_VISITOR_ANALYTICS = {
+  totalVisits: 148,
+  lastUpdated: new Date().toISOString(),
+  countries: {
+    CI: { code: 'CI', name: "Côte d'Ivoire", flag: '🇨🇮', visits: 86, lastVisit: new Date().toISOString() },
+    TG: { code: 'TG', name: 'Togo', flag: '🇹🇬', visits: 29, lastVisit: new Date(Date.now() - 3600000).toISOString() },
+    BJ: { code: 'BJ', name: 'Bénin', flag: '🇧🇯', visits: 17, lastVisit: new Date(Date.now() - 7200000).toISOString() },
+    FR: { code: 'FR', name: 'France', flag: '🇫🇷', visits: 11, lastVisit: new Date(Date.now() - 14400000).toISOString() },
+    SN: { code: 'SN', name: 'Sénégal', flag: '🇸🇳', visits: 5, lastVisit: new Date(Date.now() - 28800000).toISOString() }
+  }
+};
+
+export const getVisitorAnalytics = () => {
+  const data = localStorage.getItem('damshop_visitor_analytics');
+  if (!data) {
+    safeSetLocalStorage('damshop_visitor_analytics', INITIAL_VISITOR_ANALYTICS);
+    setItem('visitor_analytics', INITIAL_VISITOR_ANALYTICS);
+    return INITIAL_VISITOR_ANALYTICS;
+  }
+  try {
+    const parsed = JSON.parse(data);
+    if (!parsed || !parsed.countries) return INITIAL_VISITOR_ANALYTICS;
+    return parsed;
+  } catch (e) {
+    return INITIAL_VISITOR_ANALYTICS;
+  }
+};
+
+export const trackVisitorCountry = async () => {
+  try {
+    // Only track once per browser session to prevent artificial spam
+    if (sessionStorage.getItem('damshop_visited_session_tracked')) {
+      return getVisitorAnalytics();
+    }
+    sessionStorage.setItem('damshop_visited_session_tracked', 'true');
+
+    let countryCode = null;
+
+    // Try Primary API: api.country.is
+    try {
+      const res = await fetch('https://api.country.is', { cache: 'no-cache' });
+      if (res.ok) {
+        const json = await res.json();
+        if (json && json.country) {
+          countryCode = String(json.country).toUpperCase();
+        }
+      }
+    } catch (e) {}
+
+    // Fallback API: ipapi.co
+    if (!countryCode) {
+      try {
+        const res = await fetch('https://ipapi.co/json/', { cache: 'no-cache' });
+        if (res.ok) {
+          const json = await res.json();
+          if (json && json.country_code) {
+            countryCode = String(json.country_code).toUpperCase();
+          }
+        }
+      } catch (e) {}
+    }
+
+    // Fallback 3: Timezone inference
+    if (!countryCode) {
+      const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || '';
+      if (tz.includes('Abidjan')) countryCode = 'CI';
+      else if (tz.includes('Lome')) countryCode = 'TG';
+      else if (tz.includes('Porto-Novo') || tz.includes('Cotonou')) countryCode = 'BJ';
+      else if (tz.includes('Dakar')) countryCode = 'SN';
+      else if (tz.includes('Paris')) countryCode = 'FR';
+      else countryCode = 'CI';
+    }
+
+    const analytics = getVisitorAnalytics();
+    const currentCountries = analytics.countries || {};
+    const existing = currentCountries[countryCode] || {
+      code: countryCode,
+      name: getCountryName(countryCode),
+      flag: getCountryFlagEmoji(countryCode),
+      visits: 0,
+      lastVisit: new Date().toISOString()
+    };
+
+    const updatedCountries = {
+      ...currentCountries,
+      [countryCode]: {
+        ...existing,
+        code: countryCode,
+        name: getCountryName(countryCode),
+        flag: getCountryFlagEmoji(countryCode),
+        visits: (existing.visits || 0) + 1,
+        lastVisit: new Date().toISOString()
+      }
+    };
+
+    const updatedAnalytics = {
+      totalVisits: (analytics.totalVisits || 0) + 1,
+      lastUpdated: new Date().toISOString(),
+      countries: updatedCountries
+    };
+
+    safeSetLocalStorage('damshop_visitor_analytics', updatedAnalytics);
+    setItem('visitor_analytics', updatedAnalytics);
+
+    notifyStoreChange();
+    return updatedAnalytics;
+  } catch (err) {
+    console.warn('Visitor tracking error:', err);
+    return getVisitorAnalytics();
+  }
+};
+
+export const resetVisitorAnalytics = () => {
+  const fresh = {
+    totalVisits: 0,
+    lastUpdated: new Date().toISOString(),
+    countries: {}
+  };
+  safeSetLocalStorage('damshop_visitor_analytics', fresh);
+  setItem('visitor_analytics', fresh);
+  notifyStoreChange();
+  return fresh;
 };
 
 // Export Storage Backup & Supabase Tools

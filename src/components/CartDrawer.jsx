@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { X, Trash2, ArrowRight, CheckCircle2, MessageCircle, FileText, QrCode, Smartphone, CreditCard, Banknote, ShoppingBag, Download } from 'lucide-react';
 import confetti from 'canvas-confetti';
-import { formatCurrency, placeOrder, generateWhatsAppLink, downloadInvoiceFile } from '../services/store';
+import { formatCurrency, placeOrder, generateWhatsAppLink, downloadInvoiceFile, getEffectiveUnitPrice } from '../services/store';
 
 export default function CartDrawer({ isOpen, onClose, cartItems, onUpdateQuantity, settings, onViewInvoice }) {
   const [step, setStep] = useState('cart'); // 'cart' | 'checkout' | 'success'
@@ -18,7 +18,15 @@ export default function CartDrawer({ isOpen, onClose, cartItems, onUpdateQuantit
   if (!isOpen) return null;
 
   const validCartItems = Array.isArray(cartItems) ? cartItems.filter(item => item && item.product) : [];
-  const subtotal = validCartItems.reduce((acc, item) => acc + ((Number(item.product.price) || 0) * (Number(item.quantity) || 1)), 0);
+  
+  // Calculate total price with and without Special Offer Quantity Discounts
+  const rawSubtotal = validCartItems.reduce((acc, item) => acc + ((Number(item.product.price) || 0) * (Number(item.quantity) || 1)), 0);
+  const subtotal = validCartItems.reduce((acc, item) => {
+    const unitPrice = getEffectiveUnitPrice(item.product.price, item.quantity, settings);
+    return acc + (unitPrice * (Number(item.quantity) || 1));
+  }, 0);
+  const totalDiscountSaved = Math.max(0, rawSubtotal - subtotal);
+
   const configuredFee = settings?.deliveryFee !== undefined && settings?.deliveryFee !== null ? Number(settings.deliveryFee) : 2500;
   const minFreeAmount = Number(settings?.freeShippingMinAmount) || 0;
   const isFreeShipping = minFreeAmount > 0 && subtotal >= minFreeAmount;
@@ -45,16 +53,20 @@ export default function CartDrawer({ isOpen, onClose, cartItems, onUpdateQuantit
       ...formData,
       total,
       purchasedCategories,
-      items: cartItems.map(item => ({
-        id: item.product?.id,
-        name: item.product.name,
-        category: item.product.category,
-        quantity: item.quantity,
-        price: item.product.price,
-        size: item.size,
-        color: item.color,
-        image: item.product.image
-      }))
+      items: cartItems.map(item => {
+        const unitPrice = getEffectiveUnitPrice(item.product.price, item.quantity, settings);
+        return {
+          id: item.product?.id,
+          name: item.product.name,
+          category: item.product.category,
+          quantity: item.quantity,
+          price: unitPrice,
+          originalPrice: item.product.price,
+          size: item.size,
+          color: item.color,
+          image: item.product.image
+        };
+      })
     };
 
     const newOrder = placeOrder(orderData);
@@ -136,42 +148,64 @@ export default function CartDrawer({ isOpen, onClose, cartItems, onUpdateQuantit
                 </div>
               ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                  {cartItems.map(({ product, quantity, size, color }, idx) => (
-                    <div key={idx} className="glass-card" style={{ padding: '0.85rem', display: 'flex', gap: '0.85rem', alignItems: 'center', background: '#f8fafc', borderColor: '#e2e8f0' }}>
-                      <img src={product.image} alt={product.name} style={{ width: '65px', height: '65px', borderRadius: 'var(--radius-sm)', objectFit: 'cover' }} />
-                      <div style={{ flex: 1 }}>
-                        <div style={{ fontWeight: 700, fontSize: '0.9rem', marginBottom: '0.15rem', color: '#0f172a' }}>{product.name}</div>
-                        <div style={{ fontSize: '0.75rem', color: '#64748b', marginBottom: '0.2rem' }}>
-                          Taille: <span style={{ color: '#0f172a', fontWeight: 600 }}>{size}</span> | Couleur: <span style={{ color: '#0f172a', fontWeight: 600 }}>{color}</span>
+                  {cartItems.map(({ product, quantity, size, color }, idx) => {
+                    const unitPrice = getEffectiveUnitPrice(product.price, quantity, settings);
+                    const hasDiscount = unitPrice < product.price;
+                    const discountPercent = quantity === 2 
+                      ? (settings?.discount2Items !== undefined ? settings.discount2Items : 5)
+                      : (settings?.discount3Items !== undefined ? settings.discount3Items : 10);
+
+                    return (
+                      <div key={idx} className="glass-card" style={{ padding: '0.85rem', display: 'flex', gap: '0.85rem', alignItems: 'center', background: '#f8fafc', borderColor: '#e2e8f0' }}>
+                        <img src={product.image} alt={product.name} style={{ width: '65px', height: '65px', borderRadius: 'var(--radius-sm)', objectFit: 'cover' }} />
+                        <div style={{ flex: 1 }}>
+                          <div style={{ fontWeight: 700, fontSize: '0.9rem', marginBottom: '0.15rem', color: '#0f172a' }}>{product.name}</div>
+                          <div style={{ fontSize: '0.75rem', color: '#64748b', marginBottom: '0.2rem' }}>
+                            Taille: <span style={{ color: '#0f172a', fontWeight: 600 }}>{size}</span> | Couleur: <span style={{ color: '#0f172a', fontWeight: 600 }}>{color}</span>
+                          </div>
+                          
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', flexWrap: 'wrap' }}>
+                            <span className="font-mono" style={{ fontSize: '0.85rem', color: '#2563eb', fontWeight: 700 }}>
+                              {formatCurrency(unitPrice * quantity)}
+                            </span>
+                            {hasDiscount && (
+                              <>
+                                <span className="font-mono" style={{ fontSize: '0.75rem', color: '#94a3b8', textDecoration: 'line-through' }}>
+                                  {formatCurrency(product.price * quantity)}
+                                </span>
+                                <span style={{ fontSize: '0.7rem', background: '#dcfce7', color: '#15803d', fontWeight: 700, padding: '0.15rem 0.4rem', borderRadius: '6px' }}>
+                                  -{discountPercent}% Remise
+                                </span>
+                              </>
+                            )}
+                          </div>
+
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '0.4rem' }}>
+                            <button 
+                              onClick={() => onUpdateQuantity(idx, quantity - 1)}
+                              style={{ background: '#e2e8f0', border: 'none', color: '#0f172a', width: '22px', height: '22px', borderRadius: '4px', cursor: 'pointer', fontWeight: 700 }}
+                            >
+                              -
+                            </button>
+                            <span className="font-mono" style={{ fontSize: '0.85rem', fontWeight: 700 }}>{quantity}</span>
+                            <button 
+                              onClick={() => onUpdateQuantity(idx, quantity + 1)}
+                              style={{ background: '#e2e8f0', border: 'none', color: '#0f172a', width: '22px', height: '22px', borderRadius: '4px', cursor: 'pointer', fontWeight: 700 }}
+                            >
+                              +
+                            </button>
+                          </div>
                         </div>
-                        <div className="font-mono" style={{ fontSize: '0.85rem', color: '#2563eb', fontWeight: 700 }}>
-                          {formatCurrency(product.price)}
-                        </div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '0.4rem' }}>
-                          <button 
-                            onClick={() => onUpdateQuantity(idx, quantity - 1)}
-                            style={{ background: '#e2e8f0', border: 'none', color: '#0f172a', width: '22px', height: '22px', borderRadius: '4px', cursor: 'pointer', fontWeight: 700 }}
-                          >
-                            -
-                          </button>
-                          <span className="font-mono" style={{ fontSize: '0.85rem', fontWeight: 700 }}>{quantity}</span>
-                          <button 
-                            onClick={() => onUpdateQuantity(idx, quantity + 1)}
-                            style={{ background: '#e2e8f0', border: 'none', color: '#0f172a', width: '22px', height: '22px', borderRadius: '4px', cursor: 'pointer', fontWeight: 700 }}
-                          >
-                            +
-                          </button>
-                        </div>
+                        <button 
+                          onClick={() => onUpdateQuantity(idx, 0)}
+                          style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', padding: '0.4rem' }}
+                          title="Supprimer"
+                        >
+                          <Trash2 size={16} />
+                        </button>
                       </div>
-                      <button 
-                        onClick={() => onUpdateQuantity(idx, 0)}
-                        style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', padding: '0.4rem' }}
-                        title="Supprimer"
-                      >
-                        <Trash2 size={16} />
-                      </button>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
             </>
@@ -347,8 +381,14 @@ export default function CartDrawer({ isOpen, onClose, cartItems, onUpdateQuantit
                 <div style={{ marginBottom: '1rem' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem', color: '#64748b', marginBottom: '0.25rem' }}>
                     <span>Sous-total :</span>
-                    <span className="font-mono">{formatCurrency(subtotal)}</span>
+                    <span className="font-mono">{formatCurrency(rawSubtotal)}</span>
                   </div>
+                  {totalDiscountSaved > 0 && (
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.88rem', color: '#16a34a', fontWeight: 700, marginBottom: '0.25rem' }}>
+                      <span>🎉 Remise Offre Spéciale :</span>
+                      <span className="font-mono">-{formatCurrency(totalDiscountSaved)}</span>
+                    </div>
+                  )}
                   <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem', color: '#64748b', marginBottom: '0.5rem' }}>
                     <span>Livraison :</span>
                     <span className="font-mono">
