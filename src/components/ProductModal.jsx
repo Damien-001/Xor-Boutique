@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { X, Star, ShoppingBag, ShieldCheck, Truck, MessageSquare, Send, Share2, Copy, Check, Link } from 'lucide-react';
 import { formatCurrency, getReviews, addReview } from '../services/store';
 
-export default function ProductModal({ product, categories, onClose, onAddToCart }) {
+export default function ProductModal({ product, categories, settings, onClose, onAddToCart }) {
   const [quantity, setQuantity] = useState(1);
   const [selectedSize, setSelectedSize] = useState(product?.sizes?.[0] || 'Unique');
   const [selectedColor, setSelectedColor] = useState(product?.colors?.[0] || 'Standard');
@@ -62,6 +62,20 @@ export default function ProductModal({ product, categories, onClose, onAddToCart
     setNewReview({ userName: '', rating: 5, comment: '' });
     setShowReviewForm(false);
   };
+
+  const disc2 = settings?.discount2Items !== undefined ? settings.discount2Items : 5;
+  const disc3 = settings?.discount3Items !== undefined ? settings.discount3Items : 10;
+  const enableDiscounts = settings?.enableQuantityDiscounts !== false;
+
+  let unitPrice = product.price;
+  if (enableDiscounts) {
+    if (quantity === 2 && disc2 > 0) {
+      unitPrice = product.price * (1 - disc2 / 100);
+    } else if (quantity >= 3 && disc3 > 0) {
+      unitPrice = product.price * (1 - disc3 / 100);
+    }
+  }
+  const totalPrice = unitPrice * quantity;
 
   return (
     <div style={{
@@ -300,7 +314,7 @@ export default function ProductModal({ product, categories, onClose, onAddToCart
                     onClose();
                   }}
                 >
-                  <ShoppingBag size={18} /> Ajouter au Panier - {formatCurrency(product.price * quantity)}
+                  <ShoppingBag size={18} /> Ajouter au Panier - {formatCurrency(totalPrice)}
                 </button>
 
                 <button

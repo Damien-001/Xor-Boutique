@@ -1765,29 +1765,45 @@ CREATE POLICY "Admin All avis" ON public.reviews FOR ALL USING (true);`;
                       Configurez les réductions automatiques offertes aux clients lorsqu'ils achètent plusieurs articles sur votre boutique.
                     </p>
 
-                    <div className="form-group" style={{ marginBottom: '1rem' }}>
-                      <label className="form-label">Réduction pour 2 articles (%)</label>
-                      <input 
-                        type="number" 
-                        className="form-input" 
-                        value={settings.discount2Items !== undefined ? settings.discount2Items : 5}
-                        onChange={(e) => setSettingsState({ ...settings, discount2Items: Number(e.target.value) })}
-                        min="0"
-                        max="100"
-                      />
+                    <div style={{ marginBottom: '1.25rem', padding: '0.85rem', background: '#f8fafc', borderRadius: '10px', border: '1px solid #e2e8f0' }}>
+                      <label style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', cursor: 'pointer', fontSize: '0.88rem', color: '#0f172a', fontWeight: 700, margin: 0 }}>
+                        <input 
+                          type="checkbox" 
+                          checked={settings.enableQuantityDiscounts !== false}
+                          onChange={(e) => setSettingsState({ ...settings, enableQuantityDiscounts: e.target.checked })}
+                          style={{ width: '18px', height: '18px', accentColor: '#2563eb', cursor: 'pointer' }}
+                        />
+                        <span>Activer l'affichage des offres spéciales & remises par quantité sur les fiches produits</span>
+                      </label>
                     </div>
 
-                    <div className="form-group" style={{ marginBottom: '1rem' }}>
-                      <label className="form-label">Réduction pour 3 articles (%)</label>
-                      <input 
-                        type="number" 
-                        className="form-input" 
-                        value={settings.discount3Items !== undefined ? settings.discount3Items : 10}
-                        onChange={(e) => setSettingsState({ ...settings, discount3Items: Number(e.target.value) })}
-                        min="0"
-                        max="100"
-                      />
-                    </div>
+                    {settings.enableQuantityDiscounts !== false && (
+                      <>
+                        <div className="form-group" style={{ marginBottom: '1rem' }}>
+                          <label className="form-label">Réduction pour 2 articles (%)</label>
+                          <input 
+                            type="number" 
+                            className="form-input" 
+                            value={settings.discount2Items !== undefined ? settings.discount2Items : 5}
+                            onChange={(e) => setSettingsState({ ...settings, discount2Items: Number(e.target.value) })}
+                            min="0"
+                            max="100"
+                          />
+                        </div>
+
+                        <div className="form-group" style={{ marginBottom: '1rem' }}>
+                          <label className="form-label">Réduction pour 3 articles et + (%)</label>
+                          <input 
+                            type="number" 
+                            className="form-input" 
+                            value={settings.discount3Items !== undefined ? settings.discount3Items : 10}
+                            onChange={(e) => setSettingsState({ ...settings, discount3Items: Number(e.target.value) })}
+                            min="0"
+                            max="100"
+                          />
+                        </div>
+                      </>
+                    )}
 
                     <div className="form-group" style={{ marginBottom: '1rem' }}>
                       <label className="form-label">Seuil de Livraison Gratuite (FCFA)</label>

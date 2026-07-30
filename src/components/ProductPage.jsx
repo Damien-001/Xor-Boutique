@@ -22,6 +22,7 @@ export default function ProductPage({
   product, 
   categories, 
   allProducts,
+  settings,
   onBackToStore, 
   onAddToCart,
   onQuickView,
@@ -446,87 +447,93 @@ export default function ProductPage({
               </div>
             </div>
 
-            {/* Interactive Quantity Discount Bundle Offer Cards */}
-            <div style={{
-              background: 'linear-gradient(135deg, #f8fafc 0%, #eff6ff 100%)',
-              border: '1px solid #bfdbfe',
-              borderRadius: '16px',
-              padding: '1.25rem',
-              marginBottom: '1.75rem'
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.85rem' }}>
-                <Sparkles size={18} color="#2563eb" />
-                <span style={{ fontWeight: 800, fontSize: '0.95rem', color: '#0f172a' }}>
-                  Offres Spéciales & Remises par Quantité
-                </span>
+            {/* Interactive Quantity Discount Bundle Offer Cards - Dynamic & Governed by Admin Settings */}
+            {settings?.enableQuantityDiscounts !== false && (
+              <div style={{
+                background: 'linear-gradient(135deg, #f8fafc 0%, #eff6ff 100%)',
+                border: '1px solid #bfdbfe',
+                borderRadius: '16px',
+                padding: '1.25rem',
+                marginBottom: '1.75rem'
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.85rem' }}>
+                  <Sparkles size={18} color="#2563eb" />
+                  <span style={{ fontWeight: 800, fontSize: '0.95rem', color: '#0f172a' }}>
+                    Offres Spéciales & Remises par Quantité
+                  </span>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '0.75rem' }}>
+                  {/* Pack 1 Item */}
+                  <div 
+                    onClick={() => setQuantity(1)}
+                    style={{
+                      padding: '0.75rem 0.85rem',
+                      borderRadius: '12px',
+                      border: quantity === 1 ? '2px solid #0f172a' : '1px solid #cbd5e1',
+                      background: quantity === 1 ? '#ffffff' : '#f8fafc',
+                      cursor: 'pointer',
+                      textAlign: 'center',
+                      boxShadow: quantity === 1 ? '0 4px 12px rgba(15,23,42,0.1)' : 'none'
+                    }}
+                  >
+                    <div style={{ fontSize: '0.78rem', color: '#64748b', fontWeight: 600 }}>1 Article</div>
+                    <div style={{ fontWeight: 800, fontSize: '0.95rem', color: '#0f172a', marginTop: '0.15rem' }}>
+                      Standard
+                    </div>
+                    <div style={{ fontSize: '0.72rem', color: '#94a3b8', marginTop: '0.1rem' }}>Prix normal</div>
+                  </div>
+
+                  {/* Pack 2 Items */}
+                  {(settings?.discount2Items !== undefined ? settings.discount2Items : 5) > 0 && (
+                    <div 
+                      onClick={() => setQuantity(2)}
+                      style={{
+                        padding: '0.75rem 0.85rem',
+                        borderRadius: '12px',
+                        border: quantity === 2 ? '2px solid #2563eb' : '1px solid #93c5fd',
+                        background: quantity === 2 ? '#ffffff' : '#eff6ff',
+                        cursor: 'pointer',
+                        textAlign: 'center',
+                        boxShadow: quantity === 2 ? '0 4px 12px rgba(37,99,235,0.15)' : 'none'
+                      }}
+                    >
+                      <div style={{ fontSize: '0.78rem', color: '#2563eb', fontWeight: 700 }}>2 Articles</div>
+                      <div style={{ fontWeight: 800, fontSize: '0.95rem', color: '#1d4ed8', marginTop: '0.15rem' }}>
+                        -{settings?.discount2Items !== undefined ? settings.discount2Items : 5}% de Remise
+                      </div>
+                      <div style={{ fontSize: '0.72rem', color: '#059669', fontWeight: 700, marginTop: '0.1rem' }}>
+                        Économisez -{settings?.discount2Items !== undefined ? settings.discount2Items : 5}%
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Pack 3 Items + */}
+                  {(settings?.discount3Items !== undefined ? settings.discount3Items : 10) > 0 && (
+                    <div 
+                      onClick={() => setQuantity(3)}
+                      style={{
+                        padding: '0.75rem 0.85rem',
+                        borderRadius: '12px',
+                        border: quantity >= 3 ? '2px solid #d97706' : '1px solid #fde68a',
+                        background: quantity >= 3 ? '#ffffff' : '#fef3c7',
+                        cursor: 'pointer',
+                        textAlign: 'center',
+                        boxShadow: quantity >= 3 ? '0 4px 12px rgba(217,119,6,0.15)' : 'none'
+                      }}
+                    >
+                      <div style={{ fontSize: '0.78rem', color: '#b45309', fontWeight: 700 }}>3 Articles +</div>
+                      <div style={{ fontWeight: 800, fontSize: '0.95rem', color: '#d97706', marginTop: '0.15rem' }}>
+                        -{settings?.discount3Items !== undefined ? settings.discount3Items : 10}% de Remise
+                      </div>
+                      <div style={{ fontSize: '0.72rem', color: '#b45309', fontWeight: 700, marginTop: '0.1rem' }}>
+                        {product.price * 3 >= (settings?.freeShippingMinAmount || 50000) ? 'Livraison Offerte 🚚' : 'Économisez davantage'}
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
-
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '0.75rem' }}>
-                {/* Pack 1 Item */}
-                <div 
-                  onClick={() => setQuantity(1)}
-                  style={{
-                    padding: '0.75rem 0.85rem',
-                    borderRadius: '12px',
-                    border: quantity === 1 ? '2px solid #0f172a' : '1px solid #cbd5e1',
-                    background: quantity === 1 ? '#ffffff' : '#f8fafc',
-                    cursor: 'pointer',
-                    textAlign: 'center',
-                    boxShadow: quantity === 1 ? '0 4px 12px rgba(15,23,42,0.1)' : 'none'
-                  }}
-                >
-                  <div style={{ fontSize: '0.78rem', color: '#64748b', fontWeight: 600 }}>1 Article</div>
-                  <div style={{ fontWeight: 800, fontSize: '0.95rem', color: '#0f172a', marginTop: '0.15rem' }}>
-                    Standard
-                  </div>
-                  <div style={{ fontSize: '0.72rem', color: '#94a3b8', marginTop: '0.1rem' }}>Prix normal</div>
-                </div>
-
-                {/* Pack 2 Items (-5%) */}
-                <div 
-                  onClick={() => setQuantity(2)}
-                  style={{
-                    padding: '0.75rem 0.85rem',
-                    borderRadius: '12px',
-                    border: quantity === 2 ? '2px solid #2563eb' : '1px solid #93c5fd',
-                    background: quantity === 2 ? '#ffffff' : '#eff6ff',
-                    cursor: 'pointer',
-                    textAlign: 'center',
-                    boxShadow: quantity === 2 ? '0 4px 12px rgba(37,99,235,0.15)' : 'none'
-                  }}
-                >
-                  <div style={{ fontSize: '0.78rem', color: '#2563eb', fontWeight: 700 }}>2 Articles</div>
-                  <div style={{ fontWeight: 800, fontSize: '0.95rem', color: '#1d4ed8', marginTop: '0.15rem' }}>
-                    -5% de Remise
-                  </div>
-                  <div style={{ fontSize: '0.72rem', color: '#059669', fontWeight: 700, marginTop: '0.1rem' }}>
-                    Économisez -5%
-                  </div>
-                </div>
-
-                {/* Pack 3 Items (-10% + Free Delivery) */}
-                <div 
-                  onClick={() => setQuantity(3)}
-                  style={{
-                    padding: '0.75rem 0.85rem',
-                    borderRadius: '12px',
-                    border: quantity >= 3 ? '2px solid #d97706' : '1px solid #fde68a',
-                    background: quantity >= 3 ? '#ffffff' : '#fef3c7',
-                    cursor: 'pointer',
-                    textAlign: 'center',
-                    boxShadow: quantity >= 3 ? '0 4px 12px rgba(217,119,6,0.15)' : 'none'
-                  }}
-                >
-                  <div style={{ fontSize: '0.78rem', color: '#b45309', fontWeight: 700 }}>3 Articles +</div>
-                  <div style={{ fontWeight: 800, fontSize: '0.95rem', color: '#d97706', marginTop: '0.15rem' }}>
-                    -10% de Remise
-                  </div>
-                  <div style={{ fontSize: '0.72rem', color: '#b45309', fontWeight: 700, marginTop: '0.1rem' }}>
-                    Livraison Offerte 🚚
-                  </div>
-                </div>
-              </div>
-            </div>
+            )}
           </div>
 
           {/* Action Buttons: Add to Cart & Share Direct Link */}
@@ -546,7 +553,21 @@ export default function ProductPage({
                 onClick={() => !isOutOfStock && onAddToCart(product, quantity, selectedSize, selectedColor)}
               >
                 <ShoppingBag size={20} /> 
-                {isOutOfStock ? 'Article Épuisé' : `Ajouter au Panier • ${formatCurrency(product.price * quantity)}`}
+                {isOutOfStock ? 'Article Épuisé' : `Ajouter au Panier • ${formatCurrency(
+                  (() => {
+                    let unitPrice = product.price;
+                    if (settings?.enableQuantityDiscounts !== false) {
+                      if (quantity === 2) {
+                        const d2 = settings?.discount2Items !== undefined ? settings.discount2Items : 5;
+                        unitPrice = product.price * (1 - d2 / 100);
+                      } else if (quantity >= 3) {
+                        const d3 = settings?.discount3Items !== undefined ? settings.discount3Items : 10;
+                        unitPrice = product.price * (1 - d3 / 100);
+                      }
+                    }
+                    return unitPrice * quantity;
+                  })()
+                )}`}
               </button>
 
               <button

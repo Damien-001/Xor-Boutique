@@ -502,6 +502,7 @@ export default function App() {
         <ProductModal
           product={selectedProductModal}
           categories={categories}
+          settings={settings}
           onClose={handleCloseQuickViewModal}
           onAddToCart={handleAddToCart}
         />
