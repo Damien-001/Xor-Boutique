@@ -1638,6 +1638,7 @@ CREATE POLICY "Admin All avis" ON public.reviews FOR ALL USING (true);`;
           {activeTab === 'customers' && (
             <AdminCustomersTab 
               orders={orders} 
+              categories={categories}
               formatCurrency={formatCurrency} 
               onDeleteCustomer={(customer) => {
                 if (confirm(`Voulez-vous vraiment supprimer le client "${customer.name}" (${customer.phone}) du répertoire ?`)) {

@@ -10,7 +10,8 @@ export default function CartDrawer({ isOpen, onClose, cartItems, onUpdateQuantit
     email: '',
     phone: '',
     address: '',
-    paymentMethod: 'Mobile Money (Moov Afrique, Mixx by Yas)'
+    paymentMethod: 'Mobile Money (Moov Afrique, Mixx by Yas)',
+    whatsappConsent: true
   });
   const [placedOrder, setPlacedOrder] = useState(null);
 
@@ -31,12 +32,23 @@ export default function CartDrawer({ isOpen, onClose, cartItems, onUpdateQuantit
       return;
     }
 
+    // Extract unique categories from purchased items
+    const purchasedCategories = Array.from(
+      new Set(
+        validCartItems
+          .map(item => item.product?.category)
+          .filter(Boolean)
+      )
+    );
+
     const orderData = {
       ...formData,
       total,
+      purchasedCategories,
       items: cartItems.map(item => ({
         id: item.product?.id,
         name: item.product.name,
+        category: item.product.category,
         quantity: item.quantity,
         price: item.product.price,
         size: item.size,
@@ -202,6 +214,24 @@ export default function CartDrawer({ isOpen, onClose, cartItems, onUpdateQuantit
                   value={formData.address}
                   onChange={(e) => setFormData({ ...formData, address: e.target.value })}
                 />
+              </div>
+
+              {/* WhatsApp Marketing Opt-In Checkbox */}
+              <div className="glass-card" style={{ padding: '0.75rem 0.85rem', background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: '10px' }}>
+                <label style={{ display: 'flex', alignItems: 'flex-start', gap: '0.6rem', cursor: 'pointer', fontSize: '0.82rem', color: '#166534', lineHeight: 1.4, margin: 0 }}>
+                  <input 
+                    type="checkbox" 
+                    checked={formData.whatsappConsent}
+                    onChange={(e) => setFormData({ ...formData, whatsappConsent: e.target.checked })}
+                    style={{ marginTop: '0.15rem', width: '16px', height: '16px', accentColor: '#25D366', cursor: 'pointer' }}
+                  />
+                  <span>
+                    <strong>Recevoir les nouveautés sur WhatsApp 📲</strong><br/>
+                    <span style={{ fontSize: '0.75rem', color: '#15803d' }}>
+                      Soyez informé(e) en priorité des nouveaux arrivages selon les articles que vous achetez (sans création de compte).
+                    </span>
+                  </span>
+                </label>
               </div>
 
               <div className="form-group">
