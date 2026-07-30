@@ -269,7 +269,14 @@ export const deleteProduct = (id) => {
 const updateCategoryCounts = (products) => {
   const categories = getCategories();
   const updatedCategories = categories.map(cat => {
-    const count = products.filter(p => p.category === cat.id).length;
+    const count = products.filter(p => {
+      if (!p || !p.category) return false;
+      const pCat = String(p.category).trim().toLowerCase();
+      const cId = String(cat.id || '').trim().toLowerCase();
+      const cName = String(cat.name || '').trim().toLowerCase();
+      const cSlug = String(cat.slug || '').trim().toLowerCase();
+      return pCat === cId || pCat === cName || (cSlug && pCat === cSlug);
+    }).length;
     return { ...cat, count };
   });
   safeSetLocalStorage('damshop_categories', updatedCategories);
@@ -965,6 +972,7 @@ export const pullDataFromSupabase = async () => {
     if (Array.isArray(products)) {
       safeSetLocalStorage('damshop_products', products);
       setItem('products', products);
+      updateCategoryCounts(products);
     }
 
     // NON-DESTRUCTIVE ORDER SYNC & MERGE

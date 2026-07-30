@@ -14,7 +14,7 @@ const ICON_MAP = {
   ShoppingBag
 };
 
-export default function CategoryFilter({ categories, activeCategory, onSelectCategory }) {
+export default function CategoryFilter({ categories, products = [], activeCategory, onSelectCategory }) {
   return (
     <div style={{
       maxWidth: '1440px',
@@ -51,7 +51,19 @@ export default function CategoryFilter({ categories, activeCategory, onSelectCat
       {/* Dynamic Categories */}
       {categories.map((category) => {
         const IconComponent = ICON_MAP[category.icon] || Tag;
-        const isActive = activeCategory === category.id;
+        const isActive = activeCategory === category.id || (activeCategory && category.name && activeCategory.toLowerCase() === category.name.toLowerCase());
+
+        // Calculate dynamic product count matching ID, Name, or Slug
+        const dynamicCount = Array.isArray(products) && products.length > 0
+          ? products.filter(p => {
+              if (!p || !p.category) return false;
+              const pCat = String(p.category).trim().toLowerCase();
+              const cId = String(category.id || '').trim().toLowerCase();
+              const cName = String(category.name || '').trim().toLowerCase();
+              const cSlug = String(category.slug || '').trim().toLowerCase();
+              return pCat === cId || pCat === cName || (cSlug && pCat === cSlug);
+            }).length
+          : (category.count || 0);
 
         return (
           <button
@@ -83,7 +95,7 @@ export default function CategoryFilter({ categories, activeCategory, onSelectCat
               color: isActive ? '#ffffff' : '#64748b',
               marginLeft: '0.2rem'
             }}>
-              {category.count || 0}
+              {dynamicCount}
             </span>
           </button>
         );

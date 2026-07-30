@@ -303,10 +303,20 @@ export default function App() {
 
   // Filter Products by Category and Search Query
   const filteredProducts = products.filter(product => {
-    const matchesCategory = activeCategory === 'all' || product.category === activeCategory;
+    const matchesCategory = activeCategory === 'all' || (() => {
+      if (!product || !product.category) return false;
+      const selectedCatObj = categories.find(c => c.id === activeCategory || (c.name && c.name.toLowerCase() === String(activeCategory).toLowerCase()));
+      const pCat = String(product.category).trim().toLowerCase();
+      if (!selectedCatObj) return pCat === String(activeCategory).trim().toLowerCase();
+      const cId = String(selectedCatObj.id || '').trim().toLowerCase();
+      const cName = String(selectedCatObj.name || '').trim().toLowerCase();
+      const cSlug = String(selectedCatObj.slug || '').trim().toLowerCase();
+      return pCat === cId || pCat === cName || (cSlug && pCat === cSlug);
+    })();
+
     const matchesSearch = searchQuery === '' || 
-      product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      product.description.toLowerCase().includes(searchQuery.toLowerCase());
+      (product.name && product.name.toLowerCase().includes(searchQuery.toLowerCase())) ||
+      (product.description && product.description.toLowerCase().includes(searchQuery.toLowerCase()));
     return matchesCategory && matchesSearch;
   });
 
@@ -429,6 +439,7 @@ export default function App() {
           {/* Dynamic Category Pill Selector */}
           <CategoryFilter
             categories={categories}
+            products={products}
             activeCategory={activeCategory}
             onSelectCategory={setActiveCategory}
           />
