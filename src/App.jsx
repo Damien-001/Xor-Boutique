@@ -73,7 +73,25 @@ export default function App() {
   const [searchQuery, setSearchQuery] = useState('');
 
   // Modals, Drawers and Page Views State
-  const [directProductPage, setDirectProductPage] = useState(null);
+  const [directProductPage, setDirectProductPage] = useState(() => {
+    if (typeof window === 'undefined') return null;
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const productId = params.get('product') || params.get('p');
+      const hash = window.location.hash.replace('#', '');
+      const hashProductId = hash.startsWith('product=') ? hash.replace('product=', '') : null;
+      const targetId = productId || hashProductId;
+
+      if (targetId) {
+        const initialProducts = getProducts();
+        if (Array.isArray(initialProducts) && initialProducts.length > 0) {
+          const found = initialProducts.find(p => String(p.id).toLowerCase() === String(targetId).toLowerCase());
+          if (found) return found;
+        }
+      }
+    } catch (e) {}
+    return null;
+  });
   const [selectedProductModal, setSelectedProductModal] = useState(null);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isWishlistOpen, setIsWishlistOpen] = useState(false);
@@ -265,23 +283,32 @@ export default function App() {
 
   // Auto-display Direct Product Landing Page if ?product=ID parameter or #product=ID hash is present in URL (Deep Linking)
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const productId = params.get('product') || params.get('p');
-    const hash = window.location.hash.replace('#', '');
-    const hashProductId = hash.startsWith('product=') ? hash.replace('product=', '') : null;
-    const targetId = productId || hashProductId;
+    const handleCheckProductUrl = () => {
+      const params = new URLSearchParams(window.location.search);
+      const productId = params.get('product') || params.get('p');
+      const hash = window.location.hash.replace('#', '');
+      const hashProductId = hash.startsWith('product=') ? hash.replace('product=', '') : null;
+      const targetId = productId || hashProductId;
 
-    if (targetId && products.length > 0) {
-      const found = products.find(p => String(p.id).toLowerCase() === String(targetId).toLowerCase());
-      if (found) {
-        setDirectProductPage(found);
-        setIsAdminView(false);
-        // Ensure browser address bar displays clean public URL without /admin or /login prefix
-        if (window.location.pathname.startsWith('/admin') || window.location.pathname.startsWith('/login')) {
-          window.history.replaceState({}, '', '/?product=' + targetId);
+      if (targetId && products.length > 0) {
+        const found = products.find(p => String(p.id).toLowerCase() === String(targetId).toLowerCase());
+        if (found) {
+          setDirectProductPage(found);
+          setIsAdminView(false);
+          if (window.location.pathname.startsWith('/admin') || window.location.pathname.startsWith('/login')) {
+            window.history.replaceState({}, '', '/?product=' + targetId);
+          }
+        } else {
+          setDirectProductPage(null);
         }
+      } else if (!targetId) {
+        setDirectProductPage(null);
       }
-    }
+    };
+
+    handleCheckProductUrl();
+    window.addEventListener('popstate', handleCheckProductUrl);
+    return () => window.removeEventListener('popstate', handleCheckProductUrl);
   }, [products]);
 
   // Handle returning from direct product page to full store
