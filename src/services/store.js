@@ -436,15 +436,38 @@ export const clearCart = () => {
 };
 
 // Order Functions & Automatic Stock Deduction + Order Notifications
+export const getDeletedOrderIds = () => {
+  const data = localStorage.getItem('damshop_deleted_order_ids');
+  if (!data) return [];
+  try {
+    const parsed = JSON.parse(data);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch (e) {
+    return [];
+  }
+};
+
+export const trackDeletedOrderId = (orderId) => {
+  if (!orderId) return;
+  const list = getDeletedOrderIds();
+  if (!list.includes(orderId)) {
+    const updated = [...list, orderId];
+    safeSetLocalStorage('damshop_deleted_order_ids', updated);
+  }
+};
+
 export const getOrders = () => {
   const data = localStorage.getItem('damshop_orders');
+  const deletedIds = getDeletedOrderIds();
   if (!data) {
     localStorage.setItem('damshop_orders', JSON.stringify([]));
     setItem('orders', []);
     return [];
   }
   try {
-    return JSON.parse(data);
+    const parsed = JSON.parse(data);
+    if (!Array.isArray(parsed)) return [];
+    return parsed.filter(o => o && o.id && !deletedIds.includes(o.id));
   } catch (e) {
     return [];
   }
@@ -566,8 +589,11 @@ export const updateOrderStatus = (orderId, newStatus) => {
 };
 
 export const deleteOrder = (orderId) => {
-  const orders = getOrders().filter(o => o.id !== orderId);
-  localStorage.setItem('damshop_orders', JSON.stringify(orders));
+  if (!orderId) return getOrders();
+  trackDeletedOrderId(orderId);
+
+  const orders = getOrders().filter(o => o && o.id !== orderId);
+  safeSetLocalStorage('damshop_orders', orders);
   setItem('orders', orders);
 
   if (isSupabaseConfigured()) {
@@ -990,21 +1016,35 @@ export const pullDataFromSupabase = async () => {
       updateCategoryCounts(products);
     }
 
-    // NON-DESTRUCTIVE ORDER SYNC & MERGE
+    // NON-DESTRUCTIVE ORDER SYNC & MERGE (WITH DELETED ORDERS PROTECTION)
     const cloudOrders = await fetchSupabaseOrders();
     if (Array.isArray(cloudOrders)) {
-      const localOrders = getOrders();
+      const deletedIds = getDeletedOrderIds();
+      const localOrders = getOrders(); // Automatically filters out deletedIds
       const mergedMap = new Map();
 
-      // Add cloud orders first
-      cloudOrders.forEach(o => mergedMap.set(o.id, o));
+      // Add cloud orders first (ignoring any deleted orders)
+      cloudOrders.forEach(o => {
+        if (o && o.id) {
+          if (deletedIds.includes(o.id)) {
+            // Re-execute deletion in Supabase if a deleted order is returned from cloud
+            if (isSupabaseConfigured()) {
+              deleteSupabaseOrder(o.id).catch(err => console.warn('Purge deleted cloud order error:', err));
+            }
+          } else {
+            mergedMap.set(o.id, o);
+          }
+        }
+      });
 
-      // Merge local orders that haven't reached Supabase yet, and push them to cloud
+      // Merge local active orders that haven't reached Supabase yet, and push them to cloud
       localOrders.forEach(localOrd => {
-        if (!mergedMap.has(localOrd.id)) {
-          mergedMap.set(localOrd.id, localOrd);
-          // Push unsynced local order to Supabase
-          insertSupabaseOrder(localOrd).catch(err => console.warn('Sync pending local order error:', err));
+        if (localOrd && localOrd.id && !deletedIds.includes(localOrd.id)) {
+          if (!mergedMap.has(localOrd.id)) {
+            mergedMap.set(localOrd.id, localOrd);
+            // Push unsynced local order to Supabase
+            insertSupabaseOrder(localOrd).catch(err => console.warn('Sync pending local order error:', err));
+          }
         }
       });
 
