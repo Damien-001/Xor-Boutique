@@ -48,28 +48,18 @@ export default function Navbar({
         {/* Brand Logo (Left) */}
         <div 
           onClick={() => isAdminView && onToggleAdminView()}
-          style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', cursor: 'pointer', flexShrink: 0 }}
+          style={{ display: 'flex', alignItems: 'center', cursor: 'pointer', flexShrink: 0 }}
         >
-          <div style={{
-            width: '36px',
-            height: '36px',
-            borderRadius: '10px',
-            background: '#0f172a',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            boxShadow: '0 4px 12px rgba(15, 23, 42, 0.15)'
-          }}>
-            <Sparkles size={18} color="#ffffff" />
-          </div>
-          <div>
-            <div className="font-display" style={{ fontSize: '1.15rem', fontWeight: 800, letterSpacing: '-0.02em', lineHeight: 1, color: '#0f172a', whiteSpace: 'nowrap' }}>
-              Xor<span style={{ color: '#2563eb' }}> Boutique</span>
-            </div>
-            <div className="font-mono hide-mobile" style={{ fontSize: '0.6rem', color: '#64748b', letterSpacing: '0.1em' }}>
-              BOUTIQUE EN LIGNE
-            </div>
-          </div>
+          <img 
+            src="/assets/logo/xor-boutique-logo.png" 
+            alt="XOR BOUTIQUE" 
+            style={{
+              height: '46px',
+              maxWidth: '220px',
+              objectFit: 'contain',
+              display: 'block'
+            }} 
+          />
         </div>
 
         {/* Global Search Bar (MIDDLE - Centered on Single Line) */}

@@ -72,36 +72,30 @@ export default function AdminSidebar({
       <div>
         {/* Sidebar Brand Header */}
         <div style={{ paddingBottom: '1.25rem', borderBottom: '1px solid #e2e8f0', marginBottom: '1.25rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-            <div style={{
-              width: '42px',
-              height: '42px',
-              borderRadius: '12px',
-              background: '#0f172a',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              boxShadow: '0 4px 14px rgba(15,23,42,0.2)'
-            }}>
-              <Sparkles size={22} color="#ffffff" />
-            </div>
-            <div>
-              <div className="font-display" style={{ fontSize: '1.3rem', fontWeight: 800, color: '#0f172a', lineHeight: 1 }}>
-                Xor<span style={{ color: '#2563eb' }}> Boutique</span>
-              </div>
-              <div style={{ marginTop: '0.25rem', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
-                <span className="badge" style={{
-                  fontSize: '0.65rem',
-                  padding: '0.15rem 0.6rem',
-                  borderRadius: '10px',
-                  background: isSuperAdmin ? '#fef3c7' : '#e0f2fe',
-                  color: isSuperAdmin ? '#92400e' : '#0369a1',
-                  fontWeight: 800,
-                  border: `1px solid ${isSuperAdmin ? '#fcd34d' : '#bae6fd'}`
-                }}>
-                  {isSuperAdmin ? '👑 Super Admin' : '👔 Collaborateur'}
-                </span>
-              </div>
+          <div>
+            <img 
+              src="/assets/logo/xor-boutique-logo.png" 
+              alt="XOR BOUTIQUE" 
+              style={{
+                height: '40px',
+                maxWidth: '190px',
+                objectFit: 'contain',
+                display: 'block',
+                marginBottom: '0.35rem'
+              }} 
+            />
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+              <span className="badge" style={{
+                fontSize: '0.65rem',
+                padding: '0.15rem 0.6rem',
+                borderRadius: '10px',
+                background: isSuperAdmin ? '#fef3c7' : '#e0f2fe',
+                color: isSuperAdmin ? '#92400e' : '#0369a1',
+                fontWeight: 800,
+                border: `1px solid ${isSuperAdmin ? '#fcd34d' : '#bae6fd'}`
+              }}>
+                {isSuperAdmin ? '👑 Super Admin' : '👔 Collaborateur'}
+              </span>
             </div>
           </div>
 

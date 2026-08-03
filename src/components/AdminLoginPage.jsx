@@ -126,37 +126,31 @@ export default function AdminLoginPage({ onLoginSuccess, onBackToStore }) {
         
         {/* Brand Logo & Security Header */}
         <div style={{ textAlign: 'center', marginBottom: '2.25rem' }}>
-          <div style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            width: '64px',
-            height: '64px',
-            borderRadius: '20px',
-            background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)',
-            border: '1px solid rgba(228, 186, 113, 0.4)',
-            marginBottom: '1rem',
-            boxShadow: '0 8px 20px rgba(15, 23, 42, 0.15)'
-          }}>
-            <ShieldCheck size={32} color="#E4BA71" />
-          </div>
+          <img 
+            src="/assets/logo/xor-boutique-logo.png" 
+            alt="XOR BOUTIQUE" 
+            style={{
+              height: '64px',
+              maxWidth: '260px',
+              objectFit: 'contain',
+              display: 'block',
+              margin: '0 auto 1rem auto'
+            }} 
+          />
 
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem', marginBottom: '0.4rem' }}>
-            <h1 className="font-display" style={{ fontSize: '1.65rem', fontWeight: 900, color: '#0f172a', letterSpacing: '-0.02em', margin: 0 }}>
-              Xor Boutique
-            </h1>
             <span style={{
-              fontSize: '0.65rem',
+              fontSize: '0.75rem',
               fontWeight: 800,
-              color: '#b45309',
-              background: '#fef3c7',
-              border: '1px solid #fde68a',
-              padding: '0.15rem 0.55rem',
+              color: '#0f172a',
+              background: '#f1f5f9',
+              border: '1px solid #cbd5e1',
+              padding: '0.2rem 0.75rem',
               borderRadius: '20px',
               textTransform: 'uppercase',
-              letterSpacing: '0.08em'
+              letterSpacing: '0.05em'
             }}>
-              PRO ADMIN
+              🔒 Espace d'Administration Sécurisé
             </span>
           </div>
 
