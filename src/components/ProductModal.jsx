@@ -57,6 +57,61 @@ export default function ProductModal({ product, categories, settings, onClose, o
 
   if (!product) return null;
 
+  const categoryObj = categories.find(c => c.id === product.category);
+  const productImages = (product.images && product.images.length > 0) ? product.images : (product.image ? [product.image] : []);
+  const currentImage = productImages[activeImageIndex] || product.image;
+
+  const discountPercent = (product.originalPrice && Number(product.originalPrice) > Number(product.price)) 
+    ? Math.max(0, Math.round(((Number(product.originalPrice) - Number(product.price)) / Number(product.originalPrice)) * 100))
+    : 0;
+
+  const isOutOfStock = product.stock === 0;
+  const isLowStock = product.stock > 0 && product.stock <= 3;
+  const isWishlisted = wishlistIds.includes(product.id);
+
+  // Calculate delivery date estimation (2 to 4 days from now)
+  const getDeliveryDateRange = () => {
+    const today = new Date();
+    const minDate = new Date(today);
+    minDate.setDate(today.getDate() + 2);
+    const maxDate = new Date(today);
+    maxDate.setDate(today.getDate() + 4);
+
+    const options = { day: 'numeric', month: 'short' };
+    return `${minDate.toLocaleDateString('fr-FR', options)} – ${maxDate.toLocaleDateString('fr-FR', options)}`;
+  };
+
+  const handlePrevImage = () => {
+    setActiveImageIndex((prev) => (prev === 0 ? productImages.length - 1 : prev - 1));
+  };
+
+  const handleNextImage = () => {
+    setActiveImageIndex((prev) => (prev === productImages.length - 1 ? 0 : prev + 1));
+  };
+
+  const handleShareProduct = async () => {
+    const shareUrl = `${window.location.origin}/?product=${product.id}`;
+    
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: `Xor Boutique - ${product.name}`,
+          text: `Découvrez ${product.name} sur Xor Boutique : ${product.description}`,
+          url: shareUrl
+        });
+        return;
+      } catch (err) {}
+    }
+
+    try {
+      await navigator.clipboard.writeText(shareUrl);
+      setCopiedLink(true);
+      setTimeout(() => setCopiedLink(false), 3000);
+    } catch (e) {
+      alert(`Lien direct du produit : ${shareUrl}`);
+    }
+  };
+
   const hasReviews = reviews && reviews.length > 0;
   const computedRating = hasReviews 
     ? (reviews.reduce((sum, r) => sum + Number(r.rating || 5), 0) / reviews.length).toFixed(1)
