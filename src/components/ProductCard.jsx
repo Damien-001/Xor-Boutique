@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Star, ShoppingBag, Heart, AlertTriangle, Share2, Check, MessageCircle, ChevronLeft, ChevronRight } from 'lucide-react';
-import { formatCurrency, getSettings } from '../services/store';
+import { formatCurrency, getSettings, getReviews } from '../services/store';
 
 export default function ProductCard({ 
   product, 
@@ -282,15 +282,24 @@ export default function ProductCard({
       {/* Product Details */}
       <div style={{ padding: '1.25rem', display: 'flex', flexDirection: 'column', flex: 1, justifyContent: 'space-between' }}>
         <div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.4rem' }}>
-            <span className="font-mono" style={{ fontSize: '0.75rem', color: '#64748b', textTransform: 'uppercase', fontWeight: 600 }}>
-              {categoryName}
-            </span>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.2rem', color: '#d97706', fontSize: '0.85rem', fontWeight: 700 }}>
-              <Star size={14} fill="#d97706" />
-              <span>{product.rating}</span>
-            </div>
-          </div>
+          {(() => {
+            const reviewsList = getReviews(product.id);
+            const hasRevs = reviewsList && reviewsList.length > 0;
+            const avgRatingVal = hasRevs 
+              ? (reviewsList.reduce((sum, r) => sum + Number(r.rating || 5), 0) / reviewsList.length).toFixed(1)
+              : (product.rating ? Number(product.rating).toFixed(1) : null);
+            return (
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.4rem' }}>
+                <span className="font-mono" style={{ fontSize: '0.75rem', color: '#64748b', textTransform: 'uppercase', fontWeight: 600 }}>
+                  {categoryName}
+                </span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', color: '#d97706', fontSize: '0.82rem', fontWeight: 800 }}>
+                  <Star size={14} fill={hasRevs ? "#d97706" : "#cbd5e1"} color={hasRevs ? "#d97706" : "#cbd5e1"} />
+                  <span>{hasRevs ? `${avgRatingVal} (${reviewsList.length})` : (product.rating ? `${product.rating}` : '0.0')}</span>
+                </div>
+              </div>
+            );
+          })()}
 
           <h3 className="font-display" style={{
             fontSize: '1.1rem',

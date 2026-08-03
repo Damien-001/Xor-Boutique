@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   X, 
   Star, 
@@ -20,19 +20,36 @@ import {
   RotateCcw,
   Award,
   Sparkles,
-  PhoneCall
+  PhoneCall,
+  Activity
 } from 'lucide-react';
-import { formatCurrency, getReviews, addReview } from '../services/store';
+import { formatCurrency, getReviews, addReview, subscribeToStore } from '../services/store';
+import { useLiveViewers } from '../hooks/useLiveViewers';
 
 export default function ProductModal({ product, categories, settings, onClose, onAddToCart, wishlistIds = [], onToggleWishlist }) {
   const [quantity, setQuantity] = useState(1);
   const [selectedSize, setSelectedSize] = useState(product?.sizes?.[0] || 'Unique');
   const [selectedColor, setSelectedColor] = useState(product?.colors?.[0] || 'Standard');
 
-  // Reviews state
-  const [reviews, setReviews] = useState(getReviews(product?.id));
+  // Live Viewers counter hook
+  const { liveViewers, totalViews } = useLiveViewers(product?.id);
+  const [showViewerToast, setShowViewerToast] = useState(false);
+
+  // Reviews state & real-time store subscription
+  const [reviews, setReviews] = useState(() => getReviews(product?.id));
   const [newReview, setNewReview] = useState({ userName: '', rating: 5, comment: '' });
+  const [hoverRating, setHoverRating] = useState(0);
   const [showReviewForm, setShowReviewForm] = useState(false);
+  const [reviewSubmittedToast, setReviewSubmittedToast] = useState(false);
+
+  useEffect(() => {
+    if (!product?.id) return;
+    setReviews(getReviews(product.id));
+    const unsubscribe = subscribeToStore(() => {
+      setReviews(getReviews(product.id));
+    });
+    return () => unsubscribe();
+  }, [product?.id]);
 
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const [copiedLink, setCopiedLink] = useState(false);
@@ -40,74 +57,26 @@ export default function ProductModal({ product, categories, settings, onClose, o
 
   if (!product) return null;
 
-  const categoryObj = categories.find(c => c.id === product.category);
-  const productImages = (product.images && product.images.length > 0) ? product.images : (product.image ? [product.image] : []);
-  const currentImage = productImages[activeImageIndex] || product.image;
-
-  const discountPercent = (product.originalPrice && Number(product.originalPrice) > Number(product.price)) 
-    ? Math.max(0, Math.round(((Number(product.originalPrice) - Number(product.price)) / Number(product.originalPrice)) * 100))
-    : 0;
-
-  const isOutOfStock = product.stock === 0;
-  const isLowStock = product.stock > 0 && product.stock <= 3;
-  const isWishlisted = wishlistIds.includes(product.id);
-
-  // Calculate delivery date estimation (2 to 4 days from now)
-  const getDeliveryDateRange = () => {
-    const today = new Date();
-    const minDate = new Date(today);
-    minDate.setDate(today.getDate() + 2);
-    const maxDate = new Date(today);
-    maxDate.setDate(today.getDate() + 4);
-
-    const options = { day: 'numeric', month: 'short' };
-    return `${minDate.toLocaleDateString('fr-FR', options)} – ${maxDate.toLocaleDateString('fr-FR', options)}`;
-  };
-
-  const handlePrevImage = () => {
-    setActiveImageIndex((prev) => (prev === 0 ? productImages.length - 1 : prev - 1));
-  };
-
-  const handleNextImage = () => {
-    setActiveImageIndex((prev) => (prev === productImages.length - 1 ? 0 : prev + 1));
-  };
-
-  const handleShareProduct = async () => {
-    const shareUrl = `${window.location.origin}/?product=${product.id}`;
-    
-    if (navigator.share) {
-      try {
-        await navigator.share({
-          title: `Xor Boutique - ${product.name}`,
-          text: `Découvrez ${product.name} sur Xor Boutique : ${product.description}`,
-          url: shareUrl
-        });
-        return;
-      } catch (err) {}
-    }
-
-    try {
-      await navigator.clipboard.writeText(shareUrl);
-      setCopiedLink(true);
-      setTimeout(() => setCopiedLink(false), 3000);
-    } catch (e) {
-      alert(`Lien direct du produit : ${shareUrl}`);
-    }
-  };
+  const hasReviews = reviews && reviews.length > 0;
+  const computedRating = hasReviews 
+    ? (reviews.reduce((sum, r) => sum + Number(r.rating || 5), 0) / reviews.length).toFixed(1)
+    : (product.rating ? Number(product.rating).toFixed(1) : null);
 
   const handleReviewSubmit = (e) => {
     e.preventDefault();
     if (!newReview.userName || !newReview.comment) {
-      alert('Veuillez entrer votre nom et votre commentaire.');
+      alert('Veuillez entrer votre nom et votre avis.');
       return;
     }
     const added = addReview({
       productId: product.id,
       ...newReview
     });
-    setReviews([added, ...reviews]);
+    setReviews(getReviews(product.id));
     setNewReview({ userName: '', rating: 5, comment: '' });
     setShowReviewForm(false);
+    setReviewSubmittedToast(true);
+    setTimeout(() => setReviewSubmittedToast(false), 4000);
   };
 
   return (
@@ -369,23 +338,87 @@ export default function ProductModal({ product, categories, settings, onClose, o
               {product.name}
             </h2>
 
-            {/* Rating & Social Proof */}
+            {/* Rating & Social Proof Viewers */}
             <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '0.75rem', marginBottom: '1rem' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', color: '#d97706', fontWeight: 800, fontSize: '0.9rem' }}>
-                <div style={{ display: 'flex' }}>
-                  {[...Array(5)].map((_, i) => (
-                    <Star key={i} size={15} fill={i < Math.floor(product.rating || 5) ? '#d97706' : '#cbd5e1'} color={i < Math.floor(product.rating || 5) ? '#d97706' : '#cbd5e1'} />
+              <div 
+                onClick={() => {
+                  setActiveTab('reviews');
+                  setShowReviewForm(true);
+                }}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '0.4rem',
+                  color: '#d97706',
+                  fontWeight: 800,
+                  fontSize: '0.9rem',
+                  cursor: 'pointer',
+                  background: '#fffbf0',
+                  padding: '0.35rem 0.7rem',
+                  borderRadius: '12px',
+                  border: '1px solid #fde68a',
+                  transition: 'all 0.2s ease'
+                }}
+                title="Cliquez pour donner votre avis ou consulter les évaluations"
+              >
+                <div style={{ display: 'flex', gap: '2px' }}>
+                  {[1, 2, 3, 4, 5].map((s) => (
+                    <Star 
+                      key={s} 
+                      size={15} 
+                      fill={hasReviews ? (s <= Math.round(computedRating) ? '#d97706' : '#cbd5e1') : '#cbd5e1'} 
+                      color={hasReviews ? (s <= Math.round(computedRating) ? '#d97706' : '#cbd5e1') : '#cbd5e1'} 
+                    />
                   ))}
                 </div>
-                <span>{product.rating || 5.0}</span>
-                <span style={{ color: '#64748b', fontSize: '0.8rem', fontWeight: 500 }}>({reviews.length} avis)</span>
+                <span>{hasReviews ? `${computedRating} / 5` : '0.0'}</span>
+                <span style={{ color: '#2563eb', fontSize: '0.8rem', fontWeight: 600, textDecoration: 'underline' }}>
+                  ({reviews.length} {reviews.length > 1 ? 'avis' : 'avis'})
+                </span>
               </div>
 
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', fontSize: '0.8rem', color: '#475569', fontWeight: 600 }}>
+              <div 
+                onClick={() => setShowViewerToast(!showViewerToast)}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '0.45rem',
+                  fontSize: '0.8rem',
+                  color: '#1e40af',
+                  fontWeight: 700,
+                  background: 'linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%)',
+                  padding: '0.35rem 0.75rem',
+                  borderRadius: '20px',
+                  border: '1px solid #bfdbfe',
+                  boxShadow: '0 2px 6px rgba(37, 99, 235, 0.08)',
+                  cursor: 'pointer',
+                  position: 'relative'
+                }}
+                title="Consulter les statistiques d'audience en direct"
+              >
+                <span className="live-pulse-dot" />
                 <Eye size={15} color="#2563eb" />
-                <span>18 clients consultent ce produit</span>
+                <span><strong>{liveViewers}</strong> clients consultent ce produit</span>
               </div>
             </div>
+
+            {showViewerToast && (
+              <div className="animate-fade-in" style={{
+                background: '#0f172a',
+                color: '#ffffff',
+                padding: '0.6rem 0.9rem',
+                borderRadius: '12px',
+                fontSize: '0.8rem',
+                marginBottom: '1rem',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem',
+                boxShadow: '0 4px 15px rgba(0,0,0,0.15)'
+              }}>
+                <Activity size={16} color="#38bdf8" />
+                <span>🔥 <strong>Engouement direct :</strong> {liveViewers} personnes consultent cette fiche actuellement. Cet article a été vu <strong>{totalViews}</strong> fois.</span>
+              </div>
+            )}
 
             {/* Pricing Box */}
             <div style={{
@@ -689,90 +722,143 @@ export default function ProductModal({ product, categories, settings, onClose, o
 
           {/* TAB 3: REVIEWS */}
           {activeTab === 'reviews' && (
-            <div className="animate-fade-in">
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-                <h4 style={{ margin: 0, color: '#0f172a', fontWeight: 800, fontSize: '0.95rem' }}>
-                  Avis Clients ({reviews.length})
-                </h4>
+            <div className="animate-fade-in" id="product-modal-reviews-section">
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', flexWrap: 'wrap', gap: '0.5rem' }}>
+                <div>
+                  <h4 style={{ margin: 0, color: '#0f172a', fontWeight: 800, fontSize: '0.95rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <MessageSquare size={18} color="#2563eb" /> Avis & Évaluations ({reviews.length})
+                  </h4>
+                  {hasReviews && (
+                    <div style={{ fontSize: '0.78rem', color: '#64748b', marginTop: '0.15rem' }}>
+                      Note moyenne : <strong style={{ color: '#d97706' }}>{computedRating} / 5.0</strong> sur {reviews.length} avis vérifiés
+                    </div>
+                  )}
+                </div>
+
                 <button
                   className="btn btn-secondary"
                   onClick={() => setShowReviewForm(!showReviewForm)}
-                  style={{ fontSize: '0.8rem', padding: '0.45rem 0.85rem' }}
+                  style={{ fontSize: '0.8rem', padding: '0.45rem 0.85rem', display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }}
                 >
-                  <MessageSquare size={14} /> {showReviewForm ? 'Fermer' : 'Laisser un avis'}
+                  <MessageSquare size={14} /> {showReviewForm ? 'Fermer' : 'Écrire un avis'}
                 </button>
               </div>
 
+              {reviewSubmittedToast && (
+                <div className="animate-fade-in" style={{ background: '#dcfce7', color: '#166534', border: '1px solid #86efac', padding: '0.75rem 1rem', borderRadius: '12px', fontSize: '0.85rem', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 700 }}>
+                  <CheckCircle2 size={18} color="#166534" /> Merci ! Votre avis a été enregistré et publié avec succès.
+                </div>
+              )}
+
               {/* Review Form */}
               {showReviewForm && (
-                <form onSubmit={handleReviewSubmit} style={{ background: '#f8fafc', padding: '1rem', borderRadius: '12px', marginBottom: '1.25rem', border: '1px solid #e2e8f0' }}>
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '0.75rem', marginBottom: '0.75rem' }}>
+                <form onSubmit={handleReviewSubmit} style={{ background: '#f8fafc', padding: '1.15rem', borderRadius: '16px', marginBottom: '1.25rem', border: '1px solid #cbd5e1' }}>
+                  <h5 style={{ margin: '0 0 0.85rem 0', color: '#0f172a', fontWeight: 800, fontSize: '0.9rem' }}>
+                    Partagez votre avis sur cet article
+                  </h5>
+
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '0.85rem', marginBottom: '0.85rem' }}>
                     <div>
-                      <label className="form-label" style={{ fontSize: '0.8rem' }}>Votre Nom</label>
+                      <label className="form-label" style={{ fontSize: '0.8rem', fontWeight: 700 }}>Votre Nom / Pseudo *</label>
                       <input 
                         type="text" 
                         className="form-input" 
-                        placeholder="Ex: Marc Koffi" 
+                        placeholder="Ex: Aminata K." 
                         value={newReview.userName}
                         onChange={e => setNewReview({ ...newReview, userName: e.target.value })}
                         required
-                        style={{ fontSize: '0.85rem', padding: '0.45rem' }}
+                        style={{ fontSize: '0.85rem', padding: '0.45rem 0.75rem' }}
                       />
                     </div>
+
                     <div>
-                      <label className="form-label" style={{ fontSize: '0.8rem' }}>Note</label>
-                      <select 
-                        className="form-select"
-                        value={newReview.rating}
-                        onChange={e => setNewReview({ ...newReview, rating: Number(e.target.value) })}
-                        style={{ fontSize: '0.85rem', padding: '0.45rem' }}
-                      >
-                        <option value="5">⭐⭐⭐⭐⭐ 5/5</option>
-                        <option value="4">⭐⭐⭐⭐ 4/5</option>
-                        <option value="3">⭐⭐⭐ 3/5</option>
-                        <option value="2">⭐⭐ 2/5</option>
-                        <option value="1">⭐ 1/5</option>
-                      </select>
+                      <label className="form-label" style={{ fontSize: '0.8rem', fontWeight: 700 }}>Votre Note sur 5 *</label>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', marginTop: '0.15rem' }}>
+                        {[1, 2, 3, 4, 5].map((starVal) => (
+                          <button
+                            key={starVal}
+                            type="button"
+                            className="star-btn"
+                            onMouseEnter={() => setHoverRating(starVal)}
+                            onMouseLeave={() => setHoverRating(0)}
+                            onClick={() => setNewReview({ ...newReview, rating: starVal })}
+                            title={`${starVal} / 5 étoiles`}
+                          >
+                            <Star
+                              size={22}
+                              fill={(hoverRating || newReview.rating) >= starVal ? '#f59e0b' : '#e2e8f0'}
+                              color={(hoverRating || newReview.rating) >= starVal ? '#f59e0b' : '#cbd5e1'}
+                            />
+                          </button>
+                        ))}
+                        <span style={{ fontSize: '0.82rem', fontWeight: 800, color: '#d97706', marginLeft: '0.4rem' }}>
+                          {(hoverRating || newReview.rating)} / 5
+                        </span>
+                      </div>
                     </div>
                   </div>
 
-                  <div style={{ marginBottom: '0.75rem' }}>
-                    <label className="form-label" style={{ fontSize: '0.8rem' }}>Votre avis</label>
+                  <div style={{ marginBottom: '0.85rem' }}>
+                    <label className="form-label" style={{ fontSize: '0.8rem', fontWeight: 700 }}>Votre Avis Détaillé *</label>
                     <textarea 
                       className="form-textarea" 
                       rows="2" 
-                      placeholder="Votre avis..." 
+                      placeholder="Qualité, conforme aux photos, rapidité..." 
                       value={newReview.comment}
                       onChange={e => setNewReview({ ...newReview, comment: e.target.value })}
                       required
-                      style={{ fontSize: '0.85rem', padding: '0.45rem' }}
+                      style={{ fontSize: '0.85rem', padding: '0.5rem 0.75rem' }}
                     />
                   </div>
 
-                  <button type="submit" className="btn btn-primary" style={{ padding: '0.5rem 1.15rem', fontSize: '0.85rem' }}>
-                    <Send size={14} /> Publier
-                  </button>
+                  <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
+                    <button type="button" className="btn btn-secondary" onClick={() => setShowReviewForm(false)} style={{ fontSize: '0.8rem', padding: '0.4rem 0.9rem' }}>
+                      Annuler
+                    </button>
+                    <button type="submit" className="btn btn-primary" style={{ padding: '0.45rem 1.15rem', fontSize: '0.82rem', display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }}>
+                      <Send size={14} /> Publier l'Avis
+                    </button>
+                  </div>
                 </form>
               )}
 
               {/* Reviews List */}
               {reviews.length === 0 ? (
-                <div style={{ textAlign: 'center', padding: '1.5rem', color: '#64748b', fontSize: '0.88rem' }}>
-                  Aucun avis pour le moment.
+                <div style={{ textAlign: 'center', padding: '2rem 1rem', background: '#f8fafc', borderRadius: '16px', border: '1px border-dashed #cbd5e1' }}>
+                  <MessageSquare size={32} color="#94a3b8" style={{ margin: '0 auto 0.5rem auto' }} />
+                  <p style={{ margin: '0 0 0.75rem 0', color: '#475569', fontSize: '0.88rem', fontWeight: 600 }}>
+                    Aucun avis pour le moment sur cet article.
+                  </p>
+                  <button 
+                    className="btn btn-primary"
+                    onClick={() => setShowReviewForm(true)}
+                    style={{ fontSize: '0.82rem', padding: '0.5rem 1.1rem' }}
+                  >
+                    Soyez le premier à donner votre avis !
+                  </button>
                 </div>
               ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
                   {reviews.map(r => (
-                    <div key={r.id} style={{ background: '#f8fafc', padding: '0.85rem', borderRadius: '12px', border: '1px solid #f1f5f9' }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.25rem' }}>
-                        <div style={{ fontWeight: 800, color: '#0f172a', fontSize: '0.88rem' }}>{r.userName}</div>
-                        <div style={{ display: 'flex', gap: '0.1rem' }}>
-                          {[...Array(5)].map((_, i) => (
-                            <Star key={i} size={13} fill={i < r.rating ? '#d97706' : '#cbd5e1'} color={i < r.rating ? '#d97706' : '#cbd5e1'} />
+                    <div key={r.id} style={{ background: '#f8fafc', padding: '0.9rem 1.1rem', borderRadius: '14px', border: '1px solid #e2e8f0' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.35rem' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                          <div style={{ width: '28px', height: '28px', borderRadius: '50%', background: '#dbeafe', color: '#2563eb', fontWeight: 800, fontSize: '0.78rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            {(r.userName || r.author || 'C').charAt(0).toUpperCase()}
+                          </div>
+                          <span style={{ fontWeight: 800, color: '#0f172a', fontSize: '0.88rem' }}>
+                            {r.userName || r.author || 'Client Vérifié'}
+                          </span>
+                        </div>
+                        <div style={{ display: 'flex', gap: '0.15rem' }}>
+                          {[1, 2, 3, 4, 5].map((s) => (
+                            <Star key={s} size={13} fill={s <= Number(r.rating || 5) ? '#d97706' : '#cbd5e1'} color={s <= Number(r.rating || 5) ? '#d97706' : '#cbd5e1'} />
                           ))}
                         </div>
                       </div>
-                      <p style={{ color: '#475569', margin: 0, fontSize: '0.85rem', lineHeight: 1.5 }}>{r.comment}</p>
+                      <p style={{ color: '#475569', margin: 0, fontSize: '0.86rem', lineHeight: 1.5 }}>
+                        {r.comment}
+                      </p>
                     </div>
                   ))}
                 </div>
